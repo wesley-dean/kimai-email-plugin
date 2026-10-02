@@ -22,3 +22,16 @@ and related rights in the work worldwide are waived through the
 All contributions to this project will be released under the CC0 dedication.
 By submitting a pull request or issue, you are agreeing to comply with
 this waiver of copyright interest.
+
+## Coding standards
+
+Contributors MUST follow the applicable standards under `doc/standards/` and
+the repository's accepted ADRs and explicit local policies.  General and
+cross-cutting standards apply where relevant; language-specific standards apply
+to maintained content in that language.  Content under
+`doc/standards/examples/` is illustrative unless a governing standard states
+otherwise.
+
+Do not modify files under `doc/standards/` to create repository-specific
+exceptions.  Record exceptions or refinements through the repository's normal
+governance process.
