@@ -67,6 +67,22 @@ For more information about ADRs, check out
 [article](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions)
 on the topic.
 
+## Coding Standards
+
+This repository adopts released coding standards from
+[wesley-dean/coding_standards](https://github.com/wesley-dean/coding_standards).
+The committed snapshot lives under `doc/standards/`, and
+`.codingstandardrc` records the concrete adopted release and verified release
+artifact digest.
+
+Applicable standards are governing project requirements, subject to explicit
+repository-specific governance such as accepted ADRs.  Presence does not imply
+applicability: general standards apply where relevant, language-specific
+standards apply to maintained content in that language, and
+`doc/standards/examples/` is illustrative unless a governing standard says
+otherwise.  Do not edit the imported standards locally; project-specific
+exceptions belong in repository governance.
+
 ## License
 
 This project is licensed under the Creative Commons License 1.0 Universal
