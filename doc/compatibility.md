@@ -4,8 +4,9 @@
 
 Kimai Invoice Emailer has a narrow, evidence-based compatibility claim.
 
-Release `v0.2.0` is **CI-verified as the published package format** against
-the exact Kimai 2.67.0 source tag on PHP 8.2, 8.3, 8.4, and 8.5.
+The maintained package format is **CI-verified** against the exact Kimai 2.67.0
+source tag on PHP 8.2, 8.3, 8.4, and 8.5.  Release `v0.2.1` is the current
+published package.
 
 The `v0.2.0` release tag points to commit
 `5a79f1281145481991109d185df66ce7760f2e9c`.  Main-branch compatibility run
@@ -50,9 +51,9 @@ only validated release bytes.  A separate write-capable publish job does not
 check out or execute repository source; it re-verifies those bytes before
 creating the semantic-version tag and GitHub release.
 
-Release `v0.2.0` completed this gate successfully.  Its GitHub release
-contains both the deterministic ZIP and SHA-256 sidecar produced by the
-validated main-branch workflow.
+Release `v0.2.0` completed the first packaged-release gate successfully.
+Release `v0.2.1` was subsequently produced by the same validated release
+pipeline and contains both the deterministic ZIP and SHA-256 sidecar.
 
 See [release.md](release.md) and
 [ADR-004](adr/ADR-004-deterministic-release-artifacts.md).
@@ -259,6 +260,7 @@ When adding a version:
 - [Testing](testing.md)
 - [Release Packaging](release.md)
 - [Staging Validation](staging-validation.md)
+- [STRIDE Threat Model](thread_model.md)
 - [Upstream Provenance](../UPSTREAM.md)
 - [ADR-003](adr/ADR-003-secured-manual-invoice-email-workflow.md)
 - [ADR-004](adr/ADR-004-deterministic-release-artifacts.md)

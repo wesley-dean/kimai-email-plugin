@@ -3,7 +3,7 @@
     "description": "Send existing Kimai invoices to customers through a secured manual email workflow",
     "homepage": "https://github.com/wesley-dean/kimai-email-plugin",
     "type": "kimai-plugin",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "license": "MIT",
     "authors": [
         {

@@ -26,16 +26,30 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Verifies the manual-send service contract without booting Kimai's kernel.
+ *
+ * Tests replace filesystem resolution, event dispatch, and translation
+ * boundaries with deterministic doubles while retaining real Kimai entities
+ * and Symfony Mime message objects.  Temporary attachment files are created in
+ * the operating-system temporary directory and removed after each test.
+ *
+ * This suite verifies validation, current-state re-resolution, message
+ * construction, and the absence of dispatch on rejected inputs.  It does not
+ * exercise Kimai authorization or external mail transport behavior.
  */
 final class InvoiceEmailServiceTest extends TestCase
 {
     /**
-     * @var string[]
+     * Temporary attachment files owned by the current test instance.
+     *
+     * @var list<string> Absolute paths removed during tear down.
      */
     private array $temporaryFiles = [];
 
     /**
-     * Remove temporary invoice files created by individual tests.
+     * Remove temporary invoice files created by the completed unit test.
+     *
+     * The method mutates only files recorded in `$temporaryFiles` and then
+     * delegates remaining PHPUnit cleanup to the parent class.
      *
      * @return void
      */
@@ -53,6 +67,8 @@ final class InvoiceEmailServiceTest extends TestCase
 
     /**
      * Verify preview resolves only presentation-safe authoritative values.
+     *
+     * The test confirms preview reads current invoice/file/sender state, emits no event, and exposes only display-safe attachment metadata.
      *
      * @return void
      */
@@ -89,6 +105,8 @@ final class InvoiceEmailServiceTest extends TestCase
 
     /**
      * Verify one successful send dispatches exactly one Kimai EmailEvent.
+     *
+     * The captured event is inspected for recipient, subject, maintained templates, attachment count, and deliberate absence of an explicit From address before Kimai policy is applied.
      *
      * @return void
      */
@@ -145,6 +163,8 @@ final class InvoiceEmailServiceTest extends TestCase
 
     /**
      * Verify send re-resolves recipient state after an earlier preview.
+     *
+     * Customer email is changed after preview; send must use the new current value rather than the stale confirmation snapshot.
      *
      * @return void
      */
@@ -204,6 +224,8 @@ final class InvoiceEmailServiceTest extends TestCase
     /**
      * Verify canceled invoices are rejected before file or mail interaction.
      *
+     * Neither `InvoiceService::getInvoiceFile()` nor event dispatch may be reached after cancellation is detected.
+     *
      * @return void
      */
     public function testCanceledInvoiceIsRejected(): void
@@ -232,6 +254,8 @@ final class InvoiceEmailServiceTest extends TestCase
     /**
      * Verify invoices without customer email cannot be sent.
      *
+     * Missing recipient state must become the maintained user-actionable validation exception before file or mail work begins.
+     *
      * @return void
      */
     public function testMissingRecipientIsRejected(): void
@@ -254,6 +278,8 @@ final class InvoiceEmailServiceTest extends TestCase
     /**
      * Verify syntactically invalid customer email is rejected.
      *
+     * Symfony Mime address validation must be converted into the plugin's user-safe invalid-recipient exception.
+     *
      * @return void
      */
     public function testInvalidRecipientIsRejected(): void
@@ -275,6 +301,8 @@ final class InvoiceEmailServiceTest extends TestCase
 
     /**
      * Verify a missing generated invoice file prevents dispatch.
+     *
+     * A null file resolution must fail before an `EmailEvent` is constructed or emitted.
      *
      * @return void
      */
@@ -307,6 +335,8 @@ final class InvoiceEmailServiceTest extends TestCase
     /**
      * Verify missing Kimai sender configuration is detected before dispatch.
      *
+     * An empty configured sender is treated as unsendable even though the message intentionally leaves its explicit From header unset for Kimai.
+     *
      * @return void
      */
     public function testMissingSenderIsRejected(): void
@@ -335,9 +365,14 @@ final class InvoiceEmailServiceTest extends TestCase
     }
 
     /**
-     * Create a sendable invoice entity for unit tests.
+     * Create a deterministic sendable invoice entity for unit tests.
      *
-     * @return Invoice Unsaved invoice with customer and message metadata.
+     * The returned object is unsaved and owned by the caller.  Its customer,
+     * recipient, invoice number, filename, and status are initialized to known
+     * values that individual tests may mutate.
+     *
+     * @return Invoice Unsaved invoice with deterministic customer and message
+     *     metadata.
      */
     private function createInvoice(): Invoice
     {
@@ -355,9 +390,12 @@ final class InvoiceEmailServiceTest extends TestCase
     }
 
     /**
-     * Create a readable temporary invoice attachment.
+     * Create and register a readable temporary invoice attachment.
      *
-     * @return string Absolute path to the temporary file.
+     * The helper writes a deterministic PDF-like payload to the operating
+     * system temporary directory and records the path for tear-down cleanup.
+     *
+     * @return string Absolute path to the caller-owned temporary attachment.
      */
     private function createInvoiceFile(): string
     {
@@ -371,12 +409,20 @@ final class InvoiceEmailServiceTest extends TestCase
     }
 
     /**
-     * Construct the service with deterministic translator behavior.
+     * Construct the service with deterministic translation and logging.
      *
-     * @param InvoiceService $invoiceService Kimai invoice service or test double.
-     * @param EventDispatcherInterface $dispatcher Event dispatcher or test double.
-     * @param MailConfiguration $mailConfiguration Mail sender configuration.
-     * @return InvoiceEmailService Service under test.
+     * The translator resolves only the maintained subject and unknown-customer
+     * keys needed by these tests; all other keys are returned unchanged.  A
+     * `NullLogger` prevents tests from writing operational logs.
+     *
+     * @param InvoiceService $invoiceService Kimai invoice service or test double
+     *     controlling generated-file resolution.
+     * @param EventDispatcherInterface $dispatcher Event dispatcher or test
+     *     double controlling observation of mail-event side effects.
+     * @param MailConfiguration $mailConfiguration Sender configuration supplied
+     *     to the service under test.
+     * @return InvoiceEmailService Isolated service instance with deterministic
+     *     translation and no logging side effect.
      */
     private function createService(
         InvoiceService $invoiceService,

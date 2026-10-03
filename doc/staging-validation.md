@@ -144,11 +144,18 @@ A pull-request run proves the harness can validate those published bytes.  The
 run may be recorded as staging evidence only after its exact release target and
 successful result are reviewed.
 
-### Release publication
+### Validated main workflow completion
 
-Every newly published release automatically triggers the staging workflow.
+The normal ongoing staging gate is triggered when the `Kimai 2.67
+compatibility` workflow completes successfully for a push to `main`.
 
-This is the normal ongoing staging gate.
+The staging workflow uses that workflow's exact `head_sha` to select the
+single published release whose `target_commitish` matches the validated
+commit.  This binds staging to the release created by that compatibility run.
+
+The staging workflow does not rely on a GitHub `release` event.  Releases are
+created with `GITHUB_TOKEN`, and GitHub intentionally prevents most events
+created by that token from recursively starting another workflow.
 
 ### Manual dispatch
 
@@ -157,7 +164,9 @@ tag input is blank, the latest published release is used.
 
 ## Trust Boundary
 
-The staging workflow has read-only repository permissions.
+The staging workflow has read-only repository permissions.  Its automatic
+`workflow_run` path is accepted only when the completed workflow succeeded,
+was triggered by a push, and ran for the `main` branch.
 
 It can download release assets and source needed for the test harness, but it
 cannot create, modify, or delete a release.  The workflow does not execute with
@@ -223,5 +232,6 @@ This evidence does not establish Internet delivery or mailbox receipt.
 - [Testing](testing.md)
 - [Release Packaging](release.md)
 - [Security](security.md)
+- [STRIDE Threat Model](thread_model.md)
 - [ADR-003](adr/ADR-003-secured-manual-invoice-email-workflow.md)
 - [ADR-004](adr/ADR-004-deterministic-release-artifacts.md)

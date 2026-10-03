@@ -23,17 +23,35 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Verifies the manual-send HTTP security contract inside Kimai's real kernel.
+ *
+ * The suite uses Kimai authentication, authorization, routing, CSRF handling,
+ * Doctrine-backed fixtures, Twig rendering, and the real event dispatcher.
+ * Individual tests may create database state and generated-invoice files in the
+ * disposable test environment.  Cleanup removes only files recorded by this
+ * test instance.
+ *
+ * The suite is evidence for ADR-003 and the STRIDE controls around
+ * authorization, CSRF, stale confirmation state, escaping, and mail-event
+ * dispatch.  It does not prove external SMTP delivery; that boundary is
+ * covered by the staging harness.
  */
 #[Group('integration')]
 final class InvoiceEmailerControllerTest extends AbstractControllerBaseTestCase
 {
     /**
-     * @var string[]
+     * Generated invoice files created by this test instance for later cleanup.
+     *
+     * @var list<string> Absolute paths beneath Kimai's disposable invoice-data
+     *     directory.
      */
     private array $invoiceFiles = [];
 
     /**
-     * Remove invoice files created by integration tests.
+     * Remove generated invoice files created by the completed test.
+     *
+     * The method mutates the disposable filesystem by deleting only paths
+     * recorded in `$invoiceFiles`, then delegates remaining fixture cleanup to
+     * Kimai's parent test case.
      *
      * @return void
      */
@@ -51,6 +69,8 @@ final class InvoiceEmailerControllerTest extends AbstractControllerBaseTestCase
 
     /**
      * Verify the custom email permission is required in addition to invoice access.
+     *
+     * An authenticated administrator with ordinary invoice access must receive HTTP 403 when the dedicated `email_invoice` capability is absent.
      *
      * @return void
      */
@@ -73,6 +93,8 @@ final class InvoiceEmailerControllerTest extends AbstractControllerBaseTestCase
 
     /**
      * Verify email permission alone does not substitute for invoice visibility.
+     *
+     * A user granted only the custom email permission must still receive HTTP 403 because specific-invoice visibility remains independently required.
      *
      * @return void
      */
@@ -106,6 +128,8 @@ final class InvoiceEmailerControllerTest extends AbstractControllerBaseTestCase
     /**
      * Verify GET confirmation does not dispatch an email.
      *
+     * The observational confirmation request must render one POST form and leave the captured `EmailEvent` buffer empty.
+     *
      * @return void
      */
     public function testConfirmationGetHasNoEmailSideEffect(): void
@@ -135,6 +159,8 @@ final class InvoiceEmailerControllerTest extends AbstractControllerBaseTestCase
 
     /**
      * Verify customer-controlled confirmation text remains HTML-escaped.
+     *
+     * The test persists HTML-like customer data and verifies Twig renders it as text rather than executable markup.
      *
      * @return void
      */
@@ -169,6 +195,8 @@ final class InvoiceEmailerControllerTest extends AbstractControllerBaseTestCase
     /**
      * Verify the send route cannot be invoked with GET.
      *
+     * Calling the side-effecting route with GET must fail at the HTTP routing boundary before mail dispatch can occur.
+     *
      * @return void
      */
     public function testSendRouteRejectsGet(): void
@@ -189,6 +217,8 @@ final class InvoiceEmailerControllerTest extends AbstractControllerBaseTestCase
 
     /**
      * Verify POST rejects an invalid CSRF token without dispatching email.
+     *
+     * The request reaches the authenticated route but must fail with HTTP 403 before an `EmailEvent` is emitted.
      *
      * @return void
      */
@@ -216,6 +246,8 @@ final class InvoiceEmailerControllerTest extends AbstractControllerBaseTestCase
 
     /**
      * Verify one valid confirmation POST dispatches exactly one invoice email.
+     *
+     * The test follows the real confirmation form, submits its generated CSRF token, and inspects the single `EmailEvent` produced by Kimai's dispatcher.
      *
      * @return void
      */
@@ -270,6 +302,8 @@ final class InvoiceEmailerControllerTest extends AbstractControllerBaseTestCase
     /**
      * Verify canceled invoices cannot reach the confirmation form.
      *
+     * A canceled invoice must redirect before rendering a send form or emitting an `EmailEvent`.
+     *
      * @return void
      */
     public function testCanceledInvoiceIsRejectedWithoutEmailDispatch(): void
@@ -292,8 +326,15 @@ final class InvoiceEmailerControllerTest extends AbstractControllerBaseTestCase
     /**
      * Create one database-backed invoice and its generated invoice file.
      *
-     * @param string $status Kimai invoice status assigned to the fixture.
-     * @return Invoice Persisted invoice suitable for controller testing.
+     * The helper imports Kimai's invoice fixture, writes a deterministic
+     * PDF-like payload into Kimai's normal invoice-data directory, and records
+     * the absolute path for tear-down cleanup.  The returned invoice is
+     * persisted and may be mutated further by an individual test.
+     *
+     * @param string $status Kimai invoice status assigned to the imported
+     *     fixture.
+     * @return Invoice Persisted invoice whose generated file exists and is
+     *     readable by `InvoiceService`.
      */
     private function createSendableInvoice(
         string $status = Invoice::STATUS_NEW
@@ -320,7 +361,13 @@ final class InvoiceEmailerControllerTest extends AbstractControllerBaseTestCase
     /**
      * Capture EmailEvent instances emitted by the real Kimai dispatcher.
      *
-     * @param array<int, EmailEvent> $events Mutable event capture buffer.
+     * The helper mutates both the caller-supplied buffer and the test
+     * dispatcher's listener set.  A high listener priority captures the event
+     * before ordinary downstream test behavior can obscure the plugin's
+     * emission count.
+     *
+     * @param array<int, EmailEvent> $events Mutable event capture buffer that
+     *     receives each dispatched `EmailEvent` by reference.
      * @return void
      */
     private function captureEmailEvents(array &$events): void

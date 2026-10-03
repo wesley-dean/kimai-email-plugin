@@ -5,6 +5,23 @@ All notable maintained changes to Kimai Invoice Emailer are recorded here.
 The repository uses Conventional Commit PR titles and squash-only merges.
 Release tags are created automatically from the commit type.
 
+## 0.2.2 - 2026-10-03
+
+### Documentation
+
+- Apply the adopted Doxygen-first PHP documentation standard across maintained
+  production, integration, unit, and staging PHP.
+- Add the maintained STRIDE threat model at `doc/thread_model.md`.
+- Separate the detailed threat register from the concise security posture to
+  reduce duplicated security reasoning.
+
+### CI
+
+- Bind automatic published-release staging to successful completion of the
+  exact validated `main` compatibility workflow SHA.
+- Resolve the release by matching its `target_commitish` to that validated
+  commit instead of relying on a release event created by `GITHUB_TOKEN`.
+
 ## 0.2.1 - 2026-10-03
 
 ### Testing

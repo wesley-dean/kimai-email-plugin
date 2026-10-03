@@ -35,18 +35,36 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * accepted back as authority for a later send.  The service does not persist
  * post-send audit metadata or change invoice status.
  *
- * Dispatch crosses the external mail boundary through Kimai's `EmailEvent`.
- * Successful dispatch therefore means submission to Kimai's configured mail
- * path, not recipient delivery.
+ * File access is delegated to Kimai's `InvoiceService`; no request-controlled
+ * filesystem path enters this class.  Dispatch crosses the external
+ * communication boundary through Kimai's `EmailEvent`.  A successful return
+ * means the event dispatch completed without error, not that a remote mailbox
+ * accepted or delivered the message.
+ *
+ * Routine logs contain invoice/user identifiers only.  Recipient addresses and
+ * attachment paths are deliberately excluded from maintained log context.
+ *
+ * @see \KimaiPlugin\InvoiceEmailerBundle\Controller\InvoiceEmailerController
  */
 final class InvoiceEmailService
 {
     /**
-     * @param InvoiceService $invoiceService Kimai invoice service used for file resolution.
-     * @param MailConfiguration $mailConfiguration Kimai mail sender configuration.
-     * @param EventDispatcherInterface $eventDispatcher Kimai event dispatcher.
-     * @param TranslatorInterface $translator Translator used for message content.
-     * @param LoggerInterface $logger Application logger.
+     * Initialize the send service with Kimai-owned boundary dependencies.
+     *
+     * The service does not open network connections during construction.
+     * Dependencies are retained for later filesystem resolution, message
+     * translation, non-sensitive logging, and event dispatch.
+     *
+     * @param InvoiceService $invoiceService Kimai invoice service that resolves
+     *     the generated invoice file from the current invoice object.
+     * @param MailConfiguration $mailConfiguration Kimai sender configuration
+     *     consulted during each preview/send validation.
+     * @param EventDispatcherInterface $eventDispatcher Kimai event dispatcher
+     *     used to cross into the configured mail pipeline.
+     * @param TranslatorInterface $translator Translator used for localized
+     *     subject and fallback customer text.
+     * @param LoggerInterface $logger Application logger used for non-sensitive
+     *     send-attempt identifiers.
      */
     public function __construct(
         private readonly InvoiceService $invoiceService,
@@ -60,13 +78,18 @@ final class InvoiceEmailService
     /**
      * Resolve and validate the operator-visible details for a pending send.
      *
-     * No message is dispatched and no persistent state is modified.  The
-     * returned object intentionally omits filesystem paths and must not be
-     * treated as send-authoritative state.
+     * The method reads current customer data, Kimai sender configuration, and
+     * generated-invoice file metadata.  No message is dispatched and no
+     * persistent state is modified.  The returned object intentionally omits
+     * filesystem paths and must not be treated as send-authoritative state.
      *
-     * @param Invoice $invoice Invoice selected for manual sending.
-     * @return InvoiceEmailPreview Presentation-safe send details.
-     * @throws InvoiceEmailException The invoice cannot currently be sent.
+     * @param Invoice $invoice Current Kimai invoice selected for manual sending;
+     *     the object is read but not mutated.
+     * @return InvoiceEmailPreview Immutable presentation snapshot for human
+     *     confirmation.
+     * @throws InvoiceEmailException The invoice is canceled, lacks a usable
+     *     customer/recipient/file, contains an invalid recipient, or Kimai lacks
+     *     sender configuration.
      */
     public function preview(Invoice $invoice): InvoiceEmailPreview
     {
@@ -80,15 +103,25 @@ final class InvoiceEmailService
      *
      * Validation is repeated immediately before message construction so the
      * send does not trust values displayed by an earlier confirmation request.
+     * The method reads the current generated invoice file, constructs one
+     * `TemplatedEmail`, logs only invoice/user identifiers, and dispatches one
+     * `EmailEvent`.  The configured Kimai/Symfony transport may perform
+     * network I/O as a consequence of that dispatch.
      *
-     * @param Invoice $invoice Invoice selected for manual sending.
-     * @param User|null $user Authenticated Kimai user initiating the send.
+     * The method does not modify invoice status or persist post-send audit
+     * state.  A normal return does not establish recipient delivery.
+     *
+     * @param Invoice $invoice Current invoice whose authoritative send state is
+     *     resolved immediately before dispatch; the object is not mutated.
+     * @param User|null $user Authenticated Kimai user initiating the send, or
+     *     null when no Kimai user context is available; only the user ID may be
+     *     logged.
      * @return void
-     * @throws InvoiceEmailException The invoice cannot currently be sent.
-     * Dispatch logs only invoice and initiating-user identifiers; recipient
-     * addresses and attachment paths are not added to the plugin log context.
-     *
-     * @throws \Throwable Kimai's configured mail path rejects or fails the send.
+     * @throws InvoiceEmailException The current invoice/customer/file/sender
+     *     state is not valid for sending.
+     * @throws \Throwable Kimai's event or configured mail path rejects or fails
+     *     the submission; dependency exceptions intentionally propagate to the
+     *     controller boundary.
      */
     public function send(Invoice $invoice, ?User $user = null): void
     {
@@ -116,15 +149,24 @@ final class InvoiceEmailService
     }
 
     /**
-     * Resolve current authoritative send state.
+     * Resolve the current authoritative state required for preview or send.
      *
-     * This method validates cancellation state, customer and recipient,
-     * generated invoice readability, and Kimai sender configuration before
-     * returning the data needed to construct a message.
+     * The method validates cancellation state, customer/recipient state,
+     * generated invoice readability, and Kimai sender configuration.  Recipient
+     * syntax is normalized through Symfony Mime `Address`; attachment
+     * selection is delegated to `InvoiceService`.
      *
-     * @param Invoice $invoice Invoice selected for manual sending.
+     * The returned `SplFileInfo` refers to Kimai-managed invoice storage.
+     * Callers must not substitute request-controlled paths for that object.
+     *
+     * @param Invoice $invoice Current invoice whose customer, number, status,
+     *     and generated file are read without mutation.
      * @return array{0: InvoiceEmailPreview, 1: \SplFileInfo, 2: Address}
-     * @throws InvoiceEmailException The invoice cannot currently be sent.
+     *     Presentation snapshot, readable Kimai-managed invoice file, and
+     *     validated recipient address derived from the same current state.
+     * @throws InvoiceEmailException The invoice is canceled, lacks a customer,
+     *     recipient, readable generated file, or sender configuration, or the
+     *     recipient address is syntactically invalid.
      */
     private function prepare(Invoice $invoice): array
     {

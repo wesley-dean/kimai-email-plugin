@@ -26,13 +26,16 @@ use Symfony\Component\Console\Output\OutputInterface;
  * The staging workflow copies this command into a disposable Kimai 2.67.0
  * checkout after installing the published plugin ZIP.  The command creates an
  * in-memory invoice/customer pair and a deterministic invoice file, delegates
- * the send to the plugin's real InvoiceEmailService, and removes the temporary
- * invoice file afterward.
+ * the send to the plugin's real `InvoiceEmailService`, and removes the file
+ * afterward.
  *
  * The command deliberately avoids production customer data, database writes,
- * and external recipients.  Its only external side effect is the email
- * submitted through Kimai's configured mail transport, which the maintained
- * staging workflow points at a localhost-only Mailpit SMTP sink.
+ * and external recipients.  Its filesystem side effect is limited to one
+ * deterministic file in the disposable invoice-data directory.  Its network
+ * side effect is one message submitted through Kimai's production mailer to a
+ * localhost-only Mailpit SMTP sink.
+ *
+ * This class is staging harness code, not part of the distributed plugin ZIP.
  *
  * @see \KimaiPlugin\InvoiceEmailerBundle\Service\InvoiceEmailService
  */
@@ -71,12 +74,16 @@ final class InvoiceEmailerStagingCommand extends Command
     private const INVOICE_CONTENT = '%PDF-1.4 staging invoice';
 
     /**
-     * Initialize the staging command with Kimai and plugin dependencies.
+     * Initialize the staging command with Kimai and packaged-plugin boundaries.
+     *
+     * Construction performs no filesystem or network I/O.  The dependencies
+     * are retained until `execute()` creates the deterministic attachment and
+     * crosses the configured mail boundary.
      *
      * @param InvoiceEmailService $invoiceEmailService Packaged plugin service
      *     that validates, constructs, and dispatches the invoice email.
      * @param FileHelper $fileHelper Kimai filesystem helper used to locate the
-     *     normal generated-invoice data directory.
+     *     disposable generated-invoice data directory.
      */
     public function __construct(
         private readonly InvoiceEmailService $invoiceEmailService,
@@ -88,10 +95,12 @@ final class InvoiceEmailerStagingCommand extends Command
     /**
      * Submit one deterministic invoice email through Kimai's configured mailer.
      *
-     * The invoice is not persisted.  A temporary generated-invoice file is
+     * The invoice is not persisted.  A deterministic generated-invoice file is
      * written to Kimai's normal invoice data directory so the packaged plugin
-     * resolves it through InvoiceService exactly as it would a stored invoice.
-     * The file is removed in a finally block whether sending succeeds or fails.
+     * resolves it through `InvoiceService` exactly as it would a stored
+     * invoice.  The file is removed in a finally block whether sending succeeds
+     * or fails.  Successful execution causes one SMTP submission through the
+     * configured Kimai mailer.
      *
      * @param InputInterface $input Symfony console input; no command arguments
      *     or options are consumed.
