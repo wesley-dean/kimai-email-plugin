@@ -41,6 +41,22 @@ var/plugins/InvoiceEmailerBundle/
 It then executes the plugin against Kimai's own test kernel and database reset
 mechanism.
 
+### Kimai 2.67.0 test-container shim
+
+The exact Kimai 2.67.0 tag contains a stale service definition for
+`App\Importer\ImporterService` in `config/services_test.yaml`, while that
+class is absent from the tagged source tree.  As a result,
+`lint:container --env=test` fails in unmodified Kimai 2.67.0 before evaluating
+this plugin.
+
+The compatibility workflow removes only that dead test-service definition before
+booting the integration test kernel.  Production container compilation is still
+validated against the unmodified Kimai application configuration with
+`lint:container --env=prod`.
+
+This shim is part of the test harness only and does not modify the installed
+plugin or production Kimai configuration.
+
 The integration layer verifies:
 
 - Kimai cache/plugin reload succeeds;
