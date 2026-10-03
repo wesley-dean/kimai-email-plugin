@@ -1,9 +1,9 @@
 {
     "name": "wesley-dean/kimai-email-plugin",
-    "description": "Send existing Kimai invoices to customers through a secured manual email workflow",
+    "description": "Send Kimai invoices through secured manual or opt-in creation-time email workflows",
     "homepage": "https://github.com/wesley-dean/kimai-email-plugin",
     "type": "kimai-plugin",
-    "version": "0.2.3",
+    "version": "0.3.0",
     "license": "MIT",
     "authors": [
         {
