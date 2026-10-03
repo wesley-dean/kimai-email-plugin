@@ -69,6 +69,7 @@ See [release.md](release.md) and
 | PHP | 8.5 | CI-verified |
 | Symfony | Kimai-managed 2.67.0 dependency set | CI-verified through Kimai |
 | Mail dispatch | Kimai `EmailEvent` / `KimaiMailer` path | CI-verified |
+| Automatic trigger | `InvoiceCreatedEvent` only | Source-reviewed + unit-covered |
 | SMTP transport to controlled sink | v0.2.0 staging-verified | Phase 7 |
 | External Internet delivery | Not claimed | Outside current validation |
 
@@ -177,13 +178,27 @@ path.
 Source:
 https://github.com/kimai/kimai/blob/2.67.0/src/Controller/InvoiceController.php
 
-### Future invoice-update event
+### InvoiceCreatedEvent
 
-`InvoiceUpdatePostEvent` exists in Kimai 2.67.0 and fires after invoice
-persistence for new and updated invoices.
+`InvoiceCreatedEvent` exists in Kimai 2.67.0 and is emitted by
+`InvoiceService::createInvoice()` after the invoice has been saved, the
+generated invoice file has been written, and invoice entries have been marked
+exported.
 
-It is not used by the current maintained release.  Its existence is recorded
-only as a possible input to a future automatic-send design.
+The maintained automatic-send path subscribes to this creation-specific event.
+
+Sources:
+
+- https://github.com/kimai/kimai/blob/2.67.0/src/Event/InvoiceCreatedEvent.php
+- https://github.com/kimai/kimai/blob/2.67.0/src/Invoice/InvoiceService.php
+
+### InvoiceUpdatePostEvent
+
+`InvoiceUpdatePostEvent` also exists in Kimai 2.67.0, but fires after both new
+and updated invoices are saved.
+
+ADR-005 deliberately excludes it from automatic sending so ordinary edits and
+status changes cannot become implicit resend triggers.
 
 Source:
 https://github.com/kimai/kimai/blob/2.67.0/src/Event/InvoiceUpdatePostEvent.php
