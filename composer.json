@@ -1,0 +1,47 @@
+{
+    "name": "wesley-dean/kimai-email-plugin",
+    "description": "Send existing Kimai invoices to customers through a secured manual email workflow",
+    "homepage": "https://github.com/wesley-dean/kimai-email-plugin",
+    "type": "kimai-plugin",
+    "version": "0.1.0",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Wes Dean",
+            "homepage": "https://fewerincidents.com"
+        }
+    ],
+    "keywords": [
+        "kimai",
+        "kimai-plugin",
+        "invoice",
+        "email"
+    ],
+    "require": {
+        "php": ">=8.2 <8.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "KimaiPlugin\\InvoiceEmailerBundle\\": ""
+        }
+    },
+    "extra": {
+        "kimai": {
+            "require": 26700,
+            "name": "Invoice Emailer"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "symfony/flex": false,
+            "symfony/runtime": false
+        },
+        "platform": {
+            "php": "8.2"
+        },
+        "preferred-install": {
+            "*": "dist"
+        },
+        "sort-packages": true
+    }
+}
