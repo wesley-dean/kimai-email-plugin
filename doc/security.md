@@ -2,8 +2,8 @@
 
 ## Scope
 
-This document describes the security posture intended for the first maintained
-manual invoice-email workflow.
+This document describes the security posture for the maintained manual
+invoice-email workflow and the opt-in creation-time automatic-send extension.
 
 The security-sensitive operation is transmission of an existing invoice
 document from Kimai to an external email recipient.  The principal assets are
@@ -26,8 +26,10 @@ recipient reading remain unvalidated.
 The implementation is required to provide these properties:
 
 1. A GET request cannot cause an invoice email to be sent.
-2. Email transmission can be initiated only by an authenticated, authorized
-   user through a CSRF-protected POST operation.
+2. Manual transmission can be initiated only by an authenticated, authorized
+   user through a CSRF-protected POST operation; automatic transmission
+   requires explicit deployment opt-in and an authenticated authorized user
+   creating a new invoice.
 3. The user must possess the dedicated `email_invoice` permission and normal
    authorization to view the specific invoice.
 4. Applicable customer/object access checks remain additional restrictions and
@@ -41,7 +43,10 @@ The implementation is required to provide these properties:
    is documented and accepted.
 9. A successful mail API call is not represented as proof of recipient
    delivery.
-10. The Phase 3 implementation does not persist post-send audit metadata.
+10. Neither manual nor automatic sending persists post-send audit metadata.
+11. Automatic sending observes only invoice creation, never ordinary updates.
+12. Automatic failures do not trigger retries or invalidate persisted invoice
+    creation.
 
 Phase 4 verified these controls at the automated-test boundary described in
 [testing.md](testing.md).  Claims about external delivery remain outside that
@@ -143,6 +148,18 @@ published-release staging boundary.
 
 This document remains the concise security posture and evidence summary.
 
+## Automatic-Send Boundary
+
+Automatic sending is disabled unless `INVOICE_EMAILER_AUTO_SEND=1`.  When
+enabled, the subscriber observes only `InvoiceCreatedEvent`, requires a
+current Kimai `User`, and reuses the same custom, invoice, and customer
+authorization checks as manual sending.
+
+The event fires after invoice persistence.  Mail validation or transport
+failure is therefore contained and logged rather than rethrown.  This prevents
+mail availability from becoming a false invoice-creation failure signal.  No
+automatic retry or post-send status mutation is performed.
+
 ## Cross-System Consistency
 
 The Phase 3 manual-send implementation performs no post-send database write.
@@ -155,10 +172,10 @@ delivery.
 
 Compensating controls are:
 
-- human confirmation;
+- human confirmation for manual sends;
+- explicit opt-in and creation-only scope for automatic sends;
 - no automatic retries;
-- no automatic send trigger;
-- explicit resend behavior; and
+- explicit manual resend behavior; and
 - visible user-safe failure handling.
 
 A future requirement for durable audit state, retries, or stronger consistency
@@ -204,7 +221,7 @@ See [testing.md](testing.md) for the executable evidence map.
 
 Revisit this security model when any of the following occurs:
 
-- automatic sending is proposed;
+- automatic sending expands beyond the accepted creation-only design;
 - retries or queues are introduced;
 - an outbox is introduced;
 - additional recipients are added;
@@ -223,4 +240,5 @@ Revisit this security model when any of the following occurs:
 - [Compatibility](compatibility.md)
 - [STRIDE Threat Model](thread_model.md)
 - [ADR-003](adr/ADR-003-secured-manual-invoice-email-workflow.md)
+- [ADR-005](adr/ADR-005-opt-in-creation-time-automatic-invoice-email.md)
 - [Upstream Provenance](../UPSTREAM.md)
