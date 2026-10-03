@@ -54,7 +54,13 @@ booting the integration test kernel.  Production container compilation is still
 validated against the unmodified Kimai application configuration with
 `lint:container --env=prod`.
 
-This shim is part of the test harness only and does not modify the installed
+Kimai also deliberately skips dynamic plugin discovery when `APP_ENV=test`.
+The harness therefore adds `InvoiceEmailerBundle` to the test checkout's
+`config/bundles.php` only for the controller suite.  Production route
+discovery is verified separately with `debug:router --env=prod`, where Kimai
+uses its normal dynamic plugin-loading path.
+
+These shims are part of the test harness only and do not modify the installed
 plugin or production Kimai configuration.
 
 The integration layer verifies:
