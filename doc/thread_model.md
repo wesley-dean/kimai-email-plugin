@@ -447,9 +447,10 @@ action.
 
 **Controls:**
 
-- send attempts log invoice ID and authenticated user ID;
-- the UI requires explicit human confirmation; and
-- automatic sending is absent.
+- manual send attempts log invoice ID and authenticated user ID;
+- the manual UI requires explicit human confirmation; and
+- automatic attempts log invoice/user identifiers and are distinguishable from
+  manual submissions.
 
 **Evidence:**
 
