@@ -12,11 +12,15 @@
 namespace KimaiPlugin\InvoiceEmailerBundle\Exception;
 
 /**
- * Represents a validation failure that is safe to translate for an operator.
+ * Represents a user-actionable invoice-email validation failure.
  *
- * The exception carries a translation key rather than sensitive runtime state.
- * Controller code may expose the translated message without disclosing
- * recipient addresses, attachment paths, or transport details.
+ * The exception message is a translation key rather than the rejected
+ * recipient, attachment path, or other sensitive runtime value.  A previous
+ * exception may be retained for diagnostic causality, but callers should expose
+ * only the translation key to the operator.
+ *
+ * These exceptions distinguish expected validation failure from unexpected
+ * transport or infrastructure failure at the controller boundary.
  */
 final class InvoiceEmailException extends \RuntimeException
 {
@@ -29,7 +33,11 @@ final class InvoiceEmailException extends \RuntimeException
     /** @var string Translation key for an invoice without a customer. */
     public const MISSING_CUSTOMER = 'invoice.emailer.error.missing_customer';
 
-    /** @var string Translation key for an unavailable generated invoice file. */
+    /**
+     * Translation key for an unavailable generated invoice file.
+     *
+     * @var string
+     */
     public const MISSING_FILE = 'invoice.emailer.error.missing_file';
 
     /** @var string Translation key for a customer without an email address. */
@@ -41,8 +49,10 @@ final class InvoiceEmailException extends \RuntimeException
     /**
      * Create a user-actionable validation exception.
      *
-     * @param string $translationKey Translation key safe to expose to the user.
-     * @param \Throwable|null $previous Original exception, when available.
+     * @param string $translationKey Translation key safe for the controller to
+     *     translate and expose without embedding rejected sensitive state.
+     * @param \Throwable|null $previous Original validation exception retained
+     *     for diagnostic causality; it is not part of the user-facing message.
      */
     public function __construct(
         private readonly string $translationKey,
@@ -54,7 +64,8 @@ final class InvoiceEmailException extends \RuntimeException
     /**
      * Return the user-safe translation key for this failure.
      *
-     * @return string Translation key in the default messages domain.
+     * @return string Translation key in the default messages domain; the value
+     *     contains no recipient address, attachment path, or transport detail.
      */
     public function getTranslationKey(): string
     {

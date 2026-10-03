@@ -144,11 +144,18 @@ A pull-request run proves the harness can validate those published bytes.  The
 run may be recorded as staging evidence only after its exact release target and
 successful result are reviewed.
 
-### Release publication
+### Validated main workflow completion
 
-Every newly published release automatically triggers the staging workflow.
+The normal ongoing staging gate is triggered when the `Kimai 2.67
+compatibility` workflow completes successfully for a push to `main`.
 
-This is the normal ongoing staging gate.
+The staging workflow uses that workflow's exact `head_sha` to select the
+single published release whose `target_commitish` matches the validated
+commit.  This binds staging to the release created by that compatibility run.
+
+The staging workflow does not rely on a GitHub `release` event.  Releases are
+created with `GITHUB_TOKEN`, and GitHub intentionally prevents most events
+created by that token from recursively starting another workflow.
 
 ### Manual dispatch
 
@@ -157,7 +164,9 @@ tag input is blank, the latest published release is used.
 
 ## Trust Boundary
 
-The staging workflow has read-only repository permissions.
+The staging workflow has read-only repository permissions.  Its automatic
+`workflow_run` path is accepted only when the completed workflow succeeded,
+was triggered by a push, and ran for the `main` branch.
 
 It can download release assets and source needed for the test harness, but it
 cannot create, modify, or delete a release.  The workflow does not execute with
@@ -196,17 +205,17 @@ Those claims require their own evidence.
 
 ## Current Evidence
 
-Release `v0.2.0` is **staging-verified** against the maintained Phase 7
+Release `v0.2.1` is **staging-verified** against the maintained Phase 7
 scenario.
 
 Evidence:
 
-- published release: `v0.2.0`;
+- published release: `v0.2.1`;
 - release commit:
-  `5a79f1281145481991109d185df66ce7760f2e9c`;
+  `b0297584509f0413453371577884b2e42b31696e`;
 - published ZIP digest:
-  `sha256:ed558a1a2809b22239bd7fbfd75c6e733daebce4a60461c57e8bea30a945178a`;
-- staging workflow run: `37089873036`;
+  `sha256:5b5bd0604936490a80a5660059517224e60e3501e9232e0f28caece0f9d6b285`;
+- staging workflow run: `37090870420`;
 - Kimai: `2.67.0`;
 - PHP: `8.4`;
 - SMTP sink: Mailpit `v1.31.3`; and
@@ -214,6 +223,9 @@ Evidence:
   send contract passed, the packaged send service submitted through Kimai's
   prod mailer, Mailpit accepted exactly one message, and the captured attachment
   bytes matched the deterministic staging invoice.
+
+Release `v0.2.0` remains the first successful packaged staging baseline,
+recorded by run `37089873036`.
 
 This evidence does not establish Internet delivery or mailbox receipt.
 
@@ -223,5 +235,6 @@ This evidence does not establish Internet delivery or mailbox receipt.
 - [Testing](testing.md)
 - [Release Packaging](release.md)
 - [Security](security.md)
+- [STRIDE Threat Model](thread_model.md)
 - [ADR-003](adr/ADR-003-secured-manual-invoice-email-workflow.md)
 - [ADR-004](adr/ADR-004-deterministic-release-artifacts.md)

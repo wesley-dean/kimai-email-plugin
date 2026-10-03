@@ -23,14 +23,20 @@ use App\EventSubscriber\Actions\AbstractActionsSubscriber;
  * Visibility is intentionally constrained by the same authorization layers
  * enforced again by the controller: `email_invoice`, invoice visibility, and
  * customer access.  Hiding the action is a usability aid, not the security
- * boundary; the controller remains authoritative.
+ * boundary; direct route access remains protected by the controller.
+ *
+ * The subscriber mutates only the current `PageActionsEvent`; it does not
+ * send mail, modify invoice/customer state, or expose attachment bytes.
+ *
+ * @see \KimaiPlugin\InvoiceEmailerBundle\Controller\InvoiceEmailerController
  */
 final class InvoiceActionsSubscriber extends AbstractActionsSubscriber
 {
     /**
      * Return the Kimai page-action name handled by this subscriber.
      *
-     * @return string Kimai invoice action name.
+     * @return string The stable `invoice` action name used by Kimai to invoke
+     *     this subscriber for invoice rows.
      */
     public static function getActionName(): string
     {
@@ -40,10 +46,17 @@ final class InvoiceActionsSubscriber extends AbstractActionsSubscriber
     /**
      * Add a confirmation link when the current invoice can be emailed.
      *
-     * Canceled invoices, invoices without a customer, and invoices outside the
-     * current user's authorization scope receive no plugin action.
+     * The method reads the invoice from the event payload and evaluates the
+     * current user's custom, invoice, and customer permissions before mutating
+     * the event.  Canceled invoices, invoices without a customer, unresolved
+     * invoice payloads, and invoices outside the current authorization scope
+     * receive no plugin action.
      *
-     * @param PageActionsEvent $event Current invoice-row action event.
+     * When another action already exists, the method also adds a divider before
+     * appending the email confirmation action.
+     *
+     * @param PageActionsEvent $event Mutable invoice-row action event supplied
+     *     by Kimai; the method may append a divider and one action.
      * @return void
      */
     public function onActions(PageActionsEvent $event): void

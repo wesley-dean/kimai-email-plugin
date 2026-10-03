@@ -25,20 +25,31 @@ use Symfony\Component\HttpKernel\DependencyInjection\Extension;
  * default grant is intentionally limited to `ROLE_SUPER_ADMIN`; deployments
  * may assign the permission to additional roles through Kimai's normal
  * permission management.
+ *
+ * Container mutation occurs only during Symfony compilation.  Runtime
+ * authorization remains additive: the custom permission does not replace
+ * specific-invoice visibility or customer access checks required by ADR-003.
+ *
+ * @see \KimaiPlugin\InvoiceEmailerBundle\Controller\InvoiceEmailerController
  */
 class InvoiceEmailerExtension extends Extension implements PrependExtensionInterface
 {
     /**
      * Load the plugin service definitions into Kimai's dependency container.
      *
-     * Loading this file registers the controller, application service, and
-     * invoice-action subscriber through Symfony autowiring and
-     * autoconfiguration.
+     * Loading `services.yaml` mutates the supplied container by registering
+     * the controller, application service, and action subscriber through
+     * Symfony autowiring and autoconfiguration.  The configuration fragments
+     * are accepted to satisfy Symfony's extension contract and are not treated
+     * as an additional plugin-owned configuration surface.
      *
-     * @param array<mixed> $configs Configuration fragments supplied by Symfony.
-     * @param ContainerBuilder $container Dependency container being compiled.
+     * @param array<mixed> $configs Configuration fragments supplied by Symfony;
+     *     the current plugin does not interpret values from this array.
+     * @param ContainerBuilder $container Mutable dependency container being
+     *     compiled for Kimai.
      * @return void
-     * @throws \Exception The service-definition file cannot be loaded.
+     * @throws \Exception The maintained service-definition file cannot be
+     *     located, parsed, or loaded by Symfony.
      */
     public function load(array $configs, ContainerBuilder $container): void
     {
@@ -52,16 +63,16 @@ class InvoiceEmailerExtension extends Extension implements PrependExtensionInter
     /**
      * Register the plugin permission before Kimai processes application config.
      *
-     * The permission is granted only to `ROLE_SUPER_ADMIN` by default.  This
-     * custom permission does not replace Kimai's per-invoice or customer
-     * authorization checks; those remain enforced by the controller and action
-     * subscriber under ADR-003.
+     * The method mutates Kimai's pending configuration by adding
+     * `email_invoice` to `ROLE_SUPER_ADMIN` defaults.  It does not grant
+     * invoice or customer access and therefore cannot weaken the object-level
+     * authorization required by the runtime controller.
      *
-     * @param ContainerBuilder $container Dependency container being compiled.
+     * @param ContainerBuilder $container Mutable dependency container whose
+     *     `kimai.permissions` configuration is being prepended.
      * @return void
-     *
-     * @see \KimaiPlugin\InvoiceEmailerBundle\Controller\InvoiceEmailerController
      */
+
     public function prepend(ContainerBuilder $container): void
     {
         $container->prependExtensionConfig('kimai', [

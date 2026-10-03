@@ -13,16 +13,16 @@ transport was delivered to the recipient.
 
 The current maintained line targets Kimai 2.67.0.
 
-Release `v0.2.0` is CI-verified as the published package format against Kimai
-2.67.0 with PHP 8.2, 8.3, 8.4, and 8.5.  The post-merge release gate built the
+Release `v0.2.1` is the current published package.  The maintained package
+format is CI-verified against Kimai 2.67.0 with PHP 8.2, 8.3, 8.4, and 8.5.  The post-merge release gate built the
 deterministic ZIP, installed that packaged representation into Kimai, exercised
 plugin discovery, container compilation, routes, templates, translations,
 authorization, CSRF handling, invoice-file lookup, and email-event dispatch,
 then published those validated bytes.
 
 The normal compatibility matrix intentionally uses a non-delivering mail
-transport.  Release `v0.2.0` has additionally passed published-artifact staging
-validation through a real SMTP connection to a controlled Mailpit sink.  This
+transport.  Release `v0.2.1` has passed published-artifact staging validation through a
+real SMTP connection to a controlled Mailpit sink.  This
 establishes SMTP acceptance by that sink, not Internet delivery, mailbox
 receipt, or recipient reading.
 
@@ -215,8 +215,10 @@ The maintained workflow uses:
 - current authoritative recipient and file resolution at send time; and
 - Kimai's own mail integration rather than a parallel transport configuration.
 
-See [Security Model](doc/security.md) for the threat model and evidence map.
-See [Security Policy](SECURITY.md) for vulnerability reporting.
+See [Security Model](doc/security.md) for the security posture and evidence
+boundaries.  See [STRIDE Threat Model](doc/thread_model.md) for the detailed
+threat register.  See [Security Policy](SECURITY.md) for vulnerability
+reporting.
 
 ## Testing
 
@@ -249,6 +251,7 @@ The maintained design is documented in:
 - [Architecture Decision Records](doc/adr/README.md)
 - [Decision Summary](doc/decisions.md)
 - [Security Model](doc/security.md)
+- [STRIDE Threat Model](doc/thread_model.md)
 - [Compatibility](doc/compatibility.md)
 - [Testing](doc/testing.md)
 - [Release Packaging](doc/release.md)

@@ -198,7 +198,8 @@ The pull-request trigger exercises this harness against the latest already
 published release.  Published-release events validate the newly released
 artifact automatically.
 
-See [staging-validation.md](staging-validation.md).
+See [staging-validation.md](staging-validation.md) and
+[thread_model.md](thread_model.md).
 
 ## Mail Boundary
 
