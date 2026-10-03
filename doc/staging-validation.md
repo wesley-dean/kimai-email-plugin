@@ -79,23 +79,40 @@ The staging workflow reuses the maintained successful controller scenario:
 
 `testConfirmedPostDispatchesExactlyOneEmailEvent`
 
-Kimai 2.67.0 hard-codes `null://null` for the Symfony mailer under
-`when@test`, so changing `MAILER_URL` alone is insufficient.  The disposable
-staging checkout changes only that test-environment DSN back to
-`%env(MAILER_URL)%` and sets the PHPUnit `MAILER_URL` value to
+Kimai 2.67.0 intentionally hard-codes a null mail transport under
+`APP_ENV=test`.  The staging workflow therefore keeps the controller/security
+scenario in Kimai's normal test kernel and treats it as HTTP/application
+evidence only.
+
+A separate staging-only Symfony command is copied into the disposable Kimai
+checkout and executed under `APP_ENV=prod`.  The command receives the packaged
+plugin's real `InvoiceEmailService` through dependency injection, creates a
+deterministic non-persisted invoice and generated-invoice file, and submits that
+message through Kimai's production mail configuration to
 `smtp://127.0.0.1:1025`.
 
-Production mail configuration remains unmodified.
+This preserves Kimai's test semantics while exercising the packaged plugin
+through the production mailer boundary.
 
-The scenario still performs the real plugin sequence:
+The controller scenario still performs the maintained HTTP/plugin sequence:
 
 1. authenticate as an authorized Kimai user;
 2. create a database-backed invoice and generated invoice file;
 3. request the side-effect-free confirmation page;
 4. submit the CSRF-protected POST form;
-5. dispatch the plugin's `EmailEvent`;
-6. allow Kimai's `KimaiMailer` to submit the message over SMTP; and
-7. redirect after submission.
+5. dispatch the plugin's `EmailEvent`; and
+6. redirect after submission.
+
+The separate production-kernel staging command then exercises the external
+transport boundary with a deterministic in-memory invoice:
+
+1. resolve the installed `InvoiceEmailService` from Kimai's prod container;
+2. write a deterministic invoice file into Kimai's normal invoice-data
+   directory;
+3. call the packaged service's normal `send()` method;
+4. dispatch through Kimai's `EmailSubscriber` and `KimaiMailer`;
+5. submit over SMTP to localhost Mailpit; and
+6. remove the deterministic invoice file.
 
 ## SMTP Sink Assertions
 
@@ -104,13 +121,12 @@ After PHPUnit completes, the verifier queries Mailpit's v1 API.
 It requires:
 
 - exactly one captured SMTP message;
-- exactly one recipient in the reserved `example.com` domain;
+- recipient `staging@example.com`;
 - sender `kimai@example.com`;
-- a subject beginning with `Invoice `;
+- subject `Invoice STAGING-0001`;
 - the maintained invoice-email body text;
 - exactly one attachment; and
-- attachment bytes exactly equal to the deterministic integration-test invoice
-  payload.
+- attachment bytes exactly equal to the deterministic staging invoice payload.
 
 The final attachment comparison verifies that the generated invoice crossed the
 SMTP boundary rather than merely that an email envelope was accepted.
