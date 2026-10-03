@@ -64,10 +64,10 @@ final class InvoiceEmailerController extends AbstractController
     /**
      * Render a side-effect-free confirmation page for one invoice.
      *
-     * @param Invoice $invoice Invoice resolved by Kimai from the route ID.
-     * @param Request $request Current HTTP request.
      * This method does not dispatch email or modify invoice state.
      *
+     * @param Invoice $invoice Invoice resolved by Kimai from the route ID.
+     * @param Request $request Current HTTP request.
      * @return Response Confirmation page or redirect on validation failure.
      */
     #[Route(
@@ -101,11 +101,11 @@ final class InvoiceEmailerController extends AbstractController
     /**
      * Submit one confirmed invoice email through Kimai.
      *
-     * @param Invoice $invoice Invoice resolved by Kimai from the route ID.
-     * @param Request $request Current HTTP request containing the CSRF token.
      * Authorization and send-authoritative state are evaluated at POST time;
      * the earlier confirmation page is not treated as authority.
      *
+     * @param Invoice $invoice Invoice resolved by Kimai from the route ID.
+     * @param Request $request Current HTTP request containing the CSRF token.
      * @return RedirectResponse Redirect to the invoice listing.
      */
     #[Route(
