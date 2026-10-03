@@ -6,4 +6,9 @@ services:
 
   KimaiPlugin\InvoiceEmailerBundle\:
     resource: '../../*'
-    exclude: '../../{Resources}'
+    exclude:
+      - '../../Resources/'
+
+  KimaiPlugin\InvoiceEmailerBundle\Controller\:
+    resource: '../../Controller/'
+    tags: ['controller.service_arguments']

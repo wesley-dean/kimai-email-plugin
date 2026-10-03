@@ -16,10 +16,6 @@ use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 /**
  * Provides the Kimai bundle entry point for the Invoice Emailer plugin.
- *
- * The bundle is intentionally inert at this stage.  It establishes the
- * namespace and plugin identity required by Kimai without registering invoice
- * actions, routes, permissions, event subscribers, or mail behavior.
  */
 class InvoiceEmailerBundle extends Bundle implements PluginInterface
 {

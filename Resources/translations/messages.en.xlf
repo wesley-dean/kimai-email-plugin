@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file source-language="en" target-language="en" datatype="plaintext" original="messages.en.xlf">
+    <body>
+      <trans-unit id="permission-email-invoice" resname="email_invoice">
+        <source>email_invoice</source>
+        <target>Email invoices to customers</target>
+      </trans-unit>
+      <trans-unit id="invoice-emailer-send" resname="invoice.emailer_send">
+        <source>invoice.emailer_send</source>
+        <target>Email invoice</target>
+      </trans-unit>
+      <trans-unit id="invoice-emailer-confirm-title" resname="invoice.emailer.confirm_title">
+        <source>invoice.emailer.confirm_title</source>
+        <target>Send invoice by email</target>
+      </trans-unit>
+      <trans-unit id="invoice-emailer-confirm-intro" resname="invoice.emailer.confirm_intro">
+        <source>invoice.emailer.confirm_intro</source>
+        <target>Review the resolved email details before submitting this invoice.</target>
+      </trans-unit>
+      <trans-unit id="invoice-emailer-invoice" resname="invoice.emailer.invoice">
+        <source>invoice.emailer.invoice</source>
+        <target>Invoice</target>
+      </trans-unit>
+      <trans-unit id="invoice-emailer-customer" resname="invoice.emailer.customer">
+        <source>invoice.emailer.customer</source>
+        <target>Customer</target>
+      </trans-unit>
+      <trans-unit id="invoice-emailer-recipient" resname="invoice.emailer.recipient">
+        <source>invoice.emailer.recipient</source>
+        <target>Recipient</target>
+      </trans-unit>
+      <trans-unit id="invoice-emailer-sender" resname="invoice.emailer.sender">
+        <source>invoice.emailer.sender</source>
+        <target>Sender</target>
+      </trans-unit>
+      <trans-unit id="invoice-emailer-subject-label" resname="invoice.emailer.subject_label">
+        <source>invoice.emailer.subject_label</source>
+        <target>Subject</target>
+      </trans-unit>
+      <trans-unit id="invoice-emailer-attachment" resname="invoice.emailer.attachment">
+        <source>invoice.emailer.attachment</source>
+        <target>Attachment</target>
+      </trans-unit>
+      <trans-unit id="invoice-emailer-confirm-send" resname="invoice.emailer.confirm_send">
+        <source>invoice.emailer.confirm_send</source>
+        <target>Submit email</target>
+      </trans-unit>
+      <trans-unit id="invoice-emailer-subject" resname="invoice.emailer.subject">
+        <source>invoice.emailer.subject</source>
+        <target>Invoice %number%</target>
+      </trans-unit>
+      <trans-unit id="invoice-emailer-email-body" resname="invoice.emailer.email_body">
+        <source>invoice.emailer.email_body</source>
+        <target>Invoice %number% is attached to this email.</target>
+      </trans-unit>
+      <trans-unit id="invoice-emailer-submitted" resname="invoice.emailer.submitted">
+        <source>invoice.emailer.submitted</source>
+        <target>The invoice email was submitted to Kimai's configured mail system.</target>
+      </trans-unit>
+      <trans-unit id="invoice-emailer-unknown-customer" resname="invoice.emailer.unknown_customer">
+        <source>invoice.emailer.unknown_customer</source>
+        <target>Unknown customer</target>
+      </trans-unit>
+      <trans-unit id="invoice-emailer-error-canceled" resname="invoice.emailer.error.canceled">
+        <source>invoice.emailer.error.canceled</source>
+        <target>Canceled invoices cannot be emailed.</target>
+      </trans-unit>
+      <trans-unit id="invoice-emailer-error-missing-customer" resname="invoice.emailer.error.missing_customer">
+        <source>invoice.emailer.error.missing_customer</source>
+        <target>The invoice has no customer.</target>
+      </trans-unit>
+      <trans-unit id="invoice-emailer-error-missing-recipient" resname="invoice.emailer.error.missing_recipient">
+        <source>invoice.emailer.error.missing_recipient</source>
+        <target>The invoice customer has no email address.</target>
+      </trans-unit>
+      <trans-unit id="invoice-emailer-error-invalid-recipient" resname="invoice.emailer.error.invalid_recipient">
+        <source>invoice.emailer.error.invalid_recipient</source>
+        <target>The invoice customer's email address is invalid.</target>
+      </trans-unit>
+      <trans-unit id="invoice-emailer-error-missing-file" resname="invoice.emailer.error.missing_file">
+        <source>invoice.emailer.error.missing_file</source>
+        <target>The generated invoice file is missing or unreadable.</target>
+      </trans-unit>
+      <trans-unit id="invoice-emailer-error-missing-sender" resname="invoice.emailer.error.missing_sender">
+        <source>invoice.emailer.error.missing_sender</source>
+        <target>Kimai has no configured sender email address.</target>
+      </trans-unit>
+      <trans-unit id="invoice-emailer-error-generic" resname="invoice.emailer.error.generic">
+        <source>invoice.emailer.error.generic</source>
+        <target>Kimai could not submit the invoice email.</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

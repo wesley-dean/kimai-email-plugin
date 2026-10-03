@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block main %}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">{{ 'invoice.emailer.confirm_title'|trans }}</h3>
+        </div>
+        <div class="card-body">
+            <p>{{ 'invoice.emailer.confirm_intro'|trans }}</p>
+
+            <dl class="row">
+                <dt class="col-sm-3">{{ 'invoice.emailer.invoice'|trans }}</dt>
+                <dd class="col-sm-9">{{ preview.invoiceNumber }}</dd>
+
+                <dt class="col-sm-3">{{ 'invoice.emailer.customer'|trans }}</dt>
+                <dd class="col-sm-9">{{ preview.customerName }}</dd>
+
+                <dt class="col-sm-3">{{ 'invoice.emailer.recipient'|trans }}</dt>
+                <dd class="col-sm-9">{{ preview.recipient }}</dd>
+
+                <dt class="col-sm-3">{{ 'invoice.emailer.sender'|trans }}</dt>
+                <dd class="col-sm-9">{{ preview.sender }}</dd>
+
+                <dt class="col-sm-3">{{ 'invoice.emailer.subject_label'|trans }}</dt>
+                <dd class="col-sm-9">{{ preview.subject }}</dd>
+
+                <dt class="col-sm-3">{{ 'invoice.emailer.attachment'|trans }}</dt>
+                <dd class="col-sm-9">{{ preview.attachmentName }}</dd>
+            </dl>
+
+            <form method="post" action="{{ path('invoice_emailer_send', {'id': invoice.id, '_locale': app.request.locale}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token(csrf_id) }}">
+
+                <a class="btn btn-secondary" href="{{ path('admin_invoice_list', {'_locale': app.request.locale}) }}">
+                    {{ 'cancel'|trans }}
+                </a>
+                <button class="btn btn-primary" type="submit">
+                    {{ 'invoice.emailer.confirm_send'|trans }}
+                </button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

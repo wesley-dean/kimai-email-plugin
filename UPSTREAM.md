@@ -70,8 +70,24 @@ integration patterns from ADK:
 - attachment of the existing invoice document;
 - dispatch through Kimai's `EmailEvent`;
 - the custom `email_invoice` permission concept;
-- email templates and translation concepts; and
-- invoice metadata used as informational send/audit state, subject to redesign.
+- email templates and translation concepts.
+
+The Phase 3 implementation deliberately does not persist invoice email audit
+metadata.  The original `email_sent_date` concept remains provenance context,
+but it is not imported into the maintained manual-send path.
+
+## Phase 3 Derived Implementation Record
+
+The following maintained files substantially modernize concepts reviewed in the
+ADK base and therefore retain explicit ADK provenance in their source headers:
+
+- `Controller/InvoiceEmailerController.php`;
+- `Service/InvoiceEmailService.php`; and
+- `EventSubscriber/InvoiceActionsSubscriber.php`.
+
+The implementation is rewritten around current Kimai APIs and ADR-003 rather
+than copied verbatim.  The root license and this document preserve the upstream
+MIT notice and selected base commit.
 
 The first maintained implementation will deliberately not import or preserve:
 

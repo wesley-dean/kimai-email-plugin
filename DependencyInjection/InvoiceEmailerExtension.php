@@ -13,17 +13,14 @@ namespace KimaiPlugin\InvoiceEmailerBundle\DependencyInjection;
 
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 
 /**
- * Loads service definitions for the Invoice Emailer plugin.
- *
- * This extension currently loads only the plugin's service-discovery
- * configuration.  Permissions, routes, invoice actions, and mail behavior are
- * introduced by later implementation phases governed by ADR-003.
+ * Loads service definitions and default permissions for the plugin.
  */
-class InvoiceEmailerExtension extends Extension
+class InvoiceEmailerExtension extends Extension implements PrependExtensionInterface
 {
     /**
      * Load the plugin service definitions into Kimai's dependency container.
@@ -40,5 +37,28 @@ class InvoiceEmailerExtension extends Extension
             new FileLocator(__DIR__ . '/../Resources/config')
         );
         $loader->load('services.yaml');
+    }
+
+    /**
+     * Register the plugin permission with Kimai before application configuration.
+     *
+     * The permission is granted only to ROLE_SUPER_ADMIN by default.  Kimai
+     * administrators can subsequently assign it to other roles through Kimai's
+     * normal permission-management interface.
+     *
+     * @param ContainerBuilder $container Dependency container being compiled.
+     * @return void
+     */
+    public function prepend(ContainerBuilder $container): void
+    {
+        $container->prependExtensionConfig('kimai', [
+            'permissions' => [
+                'roles' => [
+                    'ROLE_SUPER_ADMIN' => [
+                        'email_invoice',
+                    ],
+                ],
+            ],
+        ]);
     }
 }
