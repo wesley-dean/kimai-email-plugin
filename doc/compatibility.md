@@ -9,10 +9,11 @@ It is not a runtime compatibility certification.
 
 ## Current Implementation Evidence
 
-The Phase 2 plugin skeleton targets Kimai 2.67.0.  The repository's merge
-workflow initially tagged that merge as `v0.0.5`, so the package version is
-reconciled to the next patch release, `0.0.6`, while the versioning workflow is
-repaired to honor Conventional Commit lines within GitHub merge commits.
+The Phase 2 plugin skeleton targets Kimai 2.67.0.  PR #5 was merged before the
+repository switched to squash-only merges and was tagged `v0.0.5`, so the
+package version is reconciled to the next patch release, `0.0.6`.  With
+squash-only merges, Conventional Commit PR titles become the commit subject on
+`main`, which matches the existing semantic-version workflow's parsing model.
 `extra.kimai.require` remains `26700`.  The bundle entry point,
 dependency-injection extension, and service-discovery configuration follow the
 current Kimai plugin structure.
