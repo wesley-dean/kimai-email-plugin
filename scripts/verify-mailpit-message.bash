@@ -4,10 +4,10 @@
 ## @brief Verifies the invoice email captured by the staging SMTP sink.
 ## @details
 ## Polls a Mailpit v1 API until exactly one message is available, then verifies
-## that the message has one example.com recipient, the configured Kimai sender,
-## an invoice subject, the maintained invoice-email body, and exactly one
-## attachment.  The attachment bytes must match the deterministic PDF payload
-## created by InvoiceEmailerControllerTest.
+## that the message has the deterministic staging recipient, the configured
+## Kimai sender, staging invoice subject, maintained invoice-email body, and
+## exactly one attachment.  The attachment bytes must match the deterministic
+## PDF payload created by InvoiceEmailerStagingCommand.
 ##
 ## Usage:
 ## @code
@@ -29,7 +29,7 @@
 ## curl and jq failures are handled as staging-validation failures rather than
 ## propagating their raw exit status.
 ##
-## @see tests/Integration/Controller/InvoiceEmailerControllerTest.php
+## @see tests/Staging/InvoiceEmailerStagingCommand.php
 ## @see doc/staging-validation.md
 
 set -euo pipefail
@@ -78,10 +78,9 @@ fi
 
 if ! jq -e '
   (.To | length) == 1
-  and (.To[0].Address | type == "string")
-  and (.To[0].Address | endswith("@example.com"))
+  and .To[0].Address == "staging@example.com"
   and .From.Address == "kimai@example.com"
-  and (.Subject | startswith("Invoice "))
+  and .Subject == "Invoice STAGING-0001"
   and (.Text | contains("is attached to this email."))
   and (.Attachments | length) == 1
   and (.Attachments[0].PartID | type == "string")
@@ -104,7 +103,7 @@ if ! curl --fail --silent --show-error   "${base_url}/api/v1/message/latest/part
   exit "${EX_SOFTWARE}"
 fi
 
-printf '%s' '%PDF-1.4 integration test invoice' >"${expected_file}"
+printf '%s' '%PDF-1.4 staging invoice' >"${expected_file}"
 
 if ! cmp -s "${expected_file}" "${attachment_file}"; then
   printf 'Captured invoice attachment bytes did not match the test invoice.\n' >&2
