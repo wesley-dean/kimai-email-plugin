@@ -79,8 +79,13 @@ The staging workflow reuses the maintained successful controller scenario:
 
 `testConfirmedPostDispatchesExactlyOneEmailEvent`
 
-Kimai's test configuration is adjusted only so `MAILER_URL` points to the
-local Mailpit SMTP listener instead of the normal null transport.
+Kimai 2.67.0 hard-codes `null://null` for the Symfony mailer under
+`when@test`, so changing `MAILER_URL` alone is insufficient.  The disposable
+staging checkout changes only that test-environment DSN back to
+`%env(MAILER_URL)%` and sets the PHPUnit `MAILER_URL` value to
+`smtp://127.0.0.1:1025`.
+
+Production mail configuration remains unmodified.
 
 The scenario still performs the real plugin sequence:
 
