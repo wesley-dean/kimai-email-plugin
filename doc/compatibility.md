@@ -5,8 +5,8 @@
 Kimai Invoice Emailer has a narrow, evidence-based compatibility claim.
 
 The maintained package format is **CI-verified** against the exact Kimai 2.67.0
-source tag on PHP 8.2, 8.3, 8.4, and 8.5.  Release `v0.2.1` is the current
-published package.
+source tag on PHP 8.2, 8.3, 8.4, and 8.5.  Published releases are created from
+those validated bytes by the isolated release pipeline described below.
 
 The `v0.2.0` release tag points to commit
 `5a79f1281145481991109d185df66ce7760f2e9c`.  Main-branch compatibility run
