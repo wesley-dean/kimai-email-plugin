@@ -352,8 +352,11 @@ including:
 - mail failure does not create a false success state; and
 - no post-send audit metadata is persisted by the Phase 3 implementation.
 
-Until those checks exist and pass, this document records intended controls
-rather than verified runtime properties.
+Phase 4 adds automated unit and Kimai-kernel integration tests for these
+controls.  This document may describe a control as verified only after the
+corresponding workflow jobs pass for the evaluated commit or release.
+
+See [testing.md](testing.md) for the executable evidence map.
 
 ## Review Triggers
 
