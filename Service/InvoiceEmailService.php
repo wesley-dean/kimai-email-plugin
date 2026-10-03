@@ -28,7 +28,16 @@ use Symfony\Component\Mime\Exception\RfcComplianceException;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * Validates, previews, and submits a manual invoice email through Kimai.
+ * Owns validation, message construction, and Kimai email-event dispatch.
+ *
+ * The service resolves recipient, generated invoice file, sender
+ * configuration, and subject from current Kimai state.  Preview data is never
+ * accepted back as authority for a later send.  The service does not persist
+ * post-send audit metadata or change invoice status.
+ *
+ * Dispatch crosses the external mail boundary through Kimai's `EmailEvent`.
+ * Successful dispatch therefore means submission to Kimai's configured mail
+ * path, not recipient delivery.
  */
 final class InvoiceEmailService
 {
@@ -51,7 +60,9 @@ final class InvoiceEmailService
     /**
      * Resolve and validate the operator-visible details for a pending send.
      *
-     * No message is dispatched and no persistent state is modified.
+     * No message is dispatched and no persistent state is modified.  The
+     * returned object intentionally omits filesystem paths and must not be
+     * treated as send-authoritative state.
      *
      * @param Invoice $invoice Invoice selected for manual sending.
      * @return InvoiceEmailPreview Presentation-safe send details.
@@ -74,6 +85,9 @@ final class InvoiceEmailService
      * @param User|null $user Authenticated Kimai user initiating the send.
      * @return void
      * @throws InvoiceEmailException The invoice cannot currently be sent.
+     * Dispatch logs only invoice and initiating-user identifiers; recipient
+     * addresses and attachment paths are not added to the plugin log context.
+     *
      * @throws \Throwable Kimai's configured mail path rejects or fails the send.
      */
     public function send(Invoice $invoice, ?User $user = null): void
@@ -103,6 +117,10 @@ final class InvoiceEmailService
 
     /**
      * Resolve current authoritative send state.
+     *
+     * This method validates cancellation state, customer and recipient,
+     * generated invoice readability, and Kimai sender configuration before
+     * returning the data needed to construct a message.
      *
      * @param Invoice $invoice Invoice selected for manual sending.
      * @return array{0: InvoiceEmailPreview, 1: \SplFileInfo, 2: Address}

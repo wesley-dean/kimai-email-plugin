@@ -2,75 +2,113 @@
 
 ## Status
 
-This document records the compatibility target and available evidence for the
-maintained plugin.
+Kimai Invoice Emailer has a narrow, evidence-based compatibility claim.
 
-It is not a runtime compatibility certification.
+Release `v0.1.1` is **CI-verified** against the exact Kimai 2.67.0 source tag
+on PHP 8.2, 8.3, 8.4, and 8.5.
 
-## Current Implementation Evidence
+The final green compatibility run executed against PR-head commit
+`a20f7b7ac6df78261ef373bac9ba6791afa8ca28`.  That commit and the
+squash-merged `v0.1.1` commit
+`b72bd5f8cecc25c6ad55ec5af3bb0cd8b770f55a` have the same Git tree:
 
-The Phase 2 plugin skeleton targets Kimai 2.67.0.  PR #5 was merged before the
-repository switched to squash-only merges and was tagged `v0.0.5`, so the
-package version is reconciled to the next patch release, `0.0.6`.  With
-squash-only merges, Conventional Commit PR titles become the commit subject on
-`main`, which matches the existing semantic-version workflow's parsing model.
-`extra.kimai.require` remains `26700`.  The bundle entry point,
-dependency-injection extension, and service-discovery configuration follow the
-current Kimai plugin structure.
+```text
+20cf37fc4b95ff7708e2eaaa0b935b387c0912b8
+```
 
-Phase 3 adds the secured manual-send source path: permission registration,
-localized routes, invoice-row action integration, confirmation GET,
-CSRF-protected POST, current `InvoiceService` attachment lookup,
-`TemplatedEmail` construction, and dispatch through Kimai's `EmailEvent`.
+The evidence is therefore bound to the exact source tree released as
+`v0.1.1`.
 
-This remains source-level evidence only.  The plugin has not yet been installed
-into a running Kimai instance, so plugin discovery, container compilation,
-route loading, permission registration, template rendering, and end-to-end mail
-submission remain pending runtime evidence.
+This is not yet a production-delivery certification.  The integration matrix
+uses a non-delivering mail transport and does not establish external SMTP
+delivery or recipient receipt.
 
-## Initial Target
+## Verified Target
 
-The first maintained implementation targets:
-
-| Component | Initial target | Evidence status |
+| Component | Verified target | Evidence |
 | --- | --- | --- |
-| Kimai | 2.67.0 | Source/API review complete; runtime plugin test pending |
-| PHP | 8.2 through 8.5 | Kimai 2.67.0 release declares support; plugin tests pending |
-| Symfony | Kimai-managed version | Do not independently widen beyond Kimai's supported stack |
-| Mail transport | Kimai/Symfony Mailer configuration | End-to-end test pending |
+| Kimai | 2.67.0 | CI-verified |
+| PHP | 8.2 | CI-verified |
+| PHP | 8.3 | CI-verified |
+| PHP | 8.4 | CI-verified |
+| PHP | 8.5 | CI-verified |
+| Symfony | Kimai-managed 2.67.0 dependency set | CI-verified through Kimai |
+| Mail dispatch | Kimai `EmailEvent` / `KimaiMailer` path | CI-verified |
+| External SMTP delivery | Not yet verified | Phase 7 validation |
 
-Kimai 2.67.0 was released on September 13, 2026.  Its release notes state
-compatibility with PHP 8.2 through 8.5.
+Kimai 2.67.0 was released on September 13, 2026 and declares PHP 8.2 through
+8.5 compatibility.
 
 Source:
 https://github.com/kimai/kimai/releases/tag/2.67.0
 
-## Verified Kimai 2.67.0 Integration Points
+## Verified Runtime Checks
 
-The following observations have been verified against the Kimai 2.67.0 tag.
+For every PHP version in the matrix, the Phase 4 workflow:
+
+- installs standalone development dependencies;
+- validates Composer metadata;
+- runs PHPStan;
+- runs the unit suite;
+- checks out the exact Kimai 2.67.0 tag;
+- installs the plugin under `var/plugins/InvoiceEmailerBundle/`;
+- reloads Kimai with the plugin present;
+- validates the production dependency container;
+- lints plugin YAML;
+- lints plugin Twig templates;
+- lints plugin XLIFF translations;
+- verifies both plugin routes under the production environment; and
+- runs the controller integration suite with Kimai's real test kernel and MySQL
+  fixtures.
+
+The controller suite verifies authorization boundaries, CSRF rejection,
+side-effect-free GET behavior, Twig escaping, one-event dispatch for a valid
+POST, current recipient use, attachment use, and canceled-invoice rejection.
+
+See [testing.md](testing.md) for the executable evidence map.
+
+## Kimai 2.67.0 Test-Harness Conditions
+
+Two properties of the exact Kimai 2.67.0 tag affect integration testing.
+
+First, `config/services_test.yaml` contains a stale service definition for
+`App\Importer\ImporterService`, while that class is absent from the tag.  The
+integration harness removes only that dead test-only service definition before
+booting the test kernel.
+
+Second, Kimai deliberately skips dynamic plugin discovery in the `test`
+environment.  The harness therefore registers `InvoiceEmailerBundle` in the
+test checkout's `config/bundles.php` only for the controller suite.
+
+Production plugin discovery, production container compilation, and production
+route discovery are tested without those test-environment substitutions.
+
+These shims are test-harness adaptations, not plugin runtime requirements.
+
+## Verified Kimai 2.67.0 Integration Points
 
 ### InvoiceService
 
-`App\Invoice\InvoiceService::getInvoiceFile(Invoice): ?SplFileInfo` exists and
-returns the stored generated invoice file when it is readable.
+`App\Invoice\InvoiceService::getInvoiceFile(Invoice): ?SplFileInfo` exists
+and resolves the generated invoice file when it is readable.
 
 Source:
 https://github.com/kimai/kimai/blob/2.67.0/src/Invoice/InvoiceService.php
 
 ### ServiceInvoice
 
-`App\Invoice\ServiceInvoice` still exists only as a compatibility subclass and
-is explicitly deprecated since Kimai 2.56 in favor of `InvoiceService`.
+`App\Invoice\ServiceInvoice` remains only as a compatibility subclass and is
+deprecated since Kimai 2.56 in favor of `InvoiceService`.
 
-New maintained plugin code must use `InvoiceService`.
+The maintained plugin uses `InvoiceService`.
 
 Source:
 https://github.com/kimai/kimai/blob/2.67.0/src/Invoice/ServiceInvoice.php
 
 ### EmailEvent and Kimai mail handling
 
-`App\Event\EmailEvent` accepts a Symfony `Email`.
-Kimai's `EmailSubscriber` handles that event and delegates to `KimaiMailer`.
+`App\Event\EmailEvent` accepts a Symfony `Email`.  Kimai's
+`EmailSubscriber` handles that event and delegates to `KimaiMailer`.
 `KimaiMailer` delegates to the configured Symfony mailer and supplies Kimai's
 fallback From address when the message has no explicit sender.
 
@@ -82,8 +120,8 @@ Sources:
 
 ### Invoice action extension point
 
-Kimai 2.67.0 retains `AbstractActionsSubscriber`, which subscribes to named
-`actions.*` events and supports action URLs through Kimai's action framework.
+Kimai 2.67.0 retains `AbstractActionsSubscriber`, which supports the invoice
+page-action integration used by this plugin.
 
 Source:
 https://github.com/kimai/kimai/blob/2.67.0/src/EventSubscriber/Actions/AbstractActionsSubscriber.php
@@ -91,29 +129,29 @@ https://github.com/kimai/kimai/blob/2.67.0/src/EventSubscriber/Actions/AbstractA
 ### Invoice authorization and CSRF precedent
 
 Kimai's invoice controller requires `view_invoice` for invoice access and
-specific-invoice download.  Its state-changing invoice status route uses POST
-and validates a CSRF token before changing status.
+specific-invoice download.  Its state-changing invoice status operation uses
+POST and validates a CSRF token.
 
-The plugin should align with those boundaries rather than create a weaker
-alternate path.
+The plugin retains those boundaries rather than introducing a weaker alternate
+path.
 
 Source:
 https://github.com/kimai/kimai/blob/2.67.0/src/Controller/InvoiceController.php
 
 ### Future invoice-update event
 
-`InvoiceUpdatePostEvent` exists in Kimai 2.67.0 and is documented as firing
-after an invoice is saved for both new and updated invoices.
+`InvoiceUpdatePostEvent` exists in Kimai 2.67.0 and fires after invoice
+persistence for new and updated invoices.
 
-It is not used by the first maintained release.  Its presence is recorded only
-because it may be evaluated in a future automatic-send architecture.
+It is not used by the current maintained release.  Its existence is recorded
+only as a possible input to a future automatic-send design.
 
 Source:
 https://github.com/kimai/kimai/blob/2.67.0/src/Event/InvoiceUpdatePostEvent.php
 
 ## Upstream Compatibility Claims Are Not Inherited
 
-The ADK upstream Composer metadata declares:
+The ADK upstream Composer metadata declared:
 
 - PHP `>=8.1`;
 - `kimai/kimai2: ^2.0`; and
@@ -121,92 +159,54 @@ The ADK upstream Composer metadata declares:
 
 Those declarations are provenance data, not evidence for this maintained
 plugin.  The reviewed upstream source contains deprecated and unsupported
-integration assumptions, so this project must not claim broad Kimai 2.x
-compatibility merely because upstream metadata did.
+integration assumptions.
 
-The initial maintained compatibility floor is therefore Kimai 2.67.0 until
-tests establish otherwise.
+The maintained compatibility claim therefore remains Kimai 2.67.0 until tests
+establish additional versions.
 
-## Verification Matrix
+## Evidence Vocabulary
 
-The Phase 4 GitHub Actions workflow installs the plugin into the exact Kimai
-2.67.0 tag and exercises every PHP version declared compatible by that release.
-
-Kimai 2.67.0 contains a stale test-only service registration for
-`App\Importer\ImporterService`, although that class is absent from the tag.
-The integration harness removes that single dead test-service definition before
-running the plugin controller suite.  Production container linting uses the
-unmodified production service configuration.
-
-| Kimai | PHP 8.2 | PHP 8.3 | PHP 8.4 | PHP 8.5 |
-| --- | --- | --- | --- | --- |
-| 2.67.0 | CI | CI | CI | CI |
-
-A matrix cell becomes "verified" only after the corresponding workflow job
-completes successfully for the commit or release being evaluated.  The workflow
-and test inventory are documented in [testing.md](testing.md).
-
-## Required Compatibility Checks
-
-The Phase 4 workflow now executes the following checks.  Their documented
-status must still reflect actual workflow results rather than configuration
-alone:
-
-- plugin discovery and container compilation;
-- `bin/console kimai:reload --env=prod`;
-- route loading;
-- permission registration;
-- Twig template rendering;
-- translation loading;
-- controller authorization;
-- CSRF validation;
-- invoice-file resolution;
-- `EmailEvent` dispatch;
-- controlled mail transport behavior;
-- static analysis;
-- relevant unit/integration tests; and
-- one end-to-end synthetic invoice send to a controlled recipient or SMTP sink.
-
-## Compatibility Claim Policy
-
-Documentation and package metadata must distinguish:
+Documentation and package metadata distinguish:
 
 - **source-reviewed**: required APIs are present in inspected source;
-- **CI-verified**: automated tests have run successfully against that exact
+- **CI-verified**: automated tests completed successfully against that exact
   version combination;
-- **staging-verified**: the packaged plugin has been exercised in a disposable
-  installation matching the target environment; and
-- **production-observed**: the plugin has been used in a production environment,
-  without implying that observation proves universal compatibility.
+- **staging-verified**: a packaged plugin was exercised in a disposable
+  production-like installation; and
+- **production-observed**: the plugin was used in production, without implying
+  that observation proves universal compatibility.
 
-Do not convert one category into another by inference.
+One category must not be promoted to another by inference.
 
 ## Production Deployment Gate
 
-Before claiming compatibility with a specific deployment, record:
+Before claiming compatibility with a particular production deployment, record:
 
 - exact Kimai version;
 - exact PHP version;
 - container image tag and resolved digest when containerized;
 - plugin release/version;
-- mail transport type sufficient for reproducing behavior; and
-- results of the staging validation.
+- relevant mail transport type; and
+- staging-validation results.
+
+Phase 7 is reserved for production-equivalent deployment validation.
 
 ## Extending the Compatibility Range
 
-Support for an older or newer Kimai version requires evidence.
+Supporting an older or newer Kimai version requires evidence.
 
 When adding a version:
 
 1. inspect API differences relevant to this plugin;
 2. add or update the test matrix;
-3. run the plugin installation and functional checks;
-4. document any conditional compatibility behavior; and
+3. run installation and functional checks;
+4. document conditional compatibility behavior; and
 5. update package metadata only after the support claim is established.
 
 ## Related Documents
 
 - [Architecture](architecture.md)
 - [Security](security.md)
+- [Testing](testing.md)
 - [Upstream Provenance](../UPSTREAM.md)
 - [ADR-003](adr/ADR-003-secured-manual-invoice-email-workflow.md)

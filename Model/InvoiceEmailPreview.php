@@ -12,10 +12,11 @@
 namespace KimaiPlugin\InvoiceEmailerBundle\Model;
 
 /**
- * Immutable, presentation-safe description of a pending invoice email.
+ * Carries the presentation-safe snapshot shown on the confirmation page.
  *
- * Filesystem paths are deliberately excluded so the confirmation view receives
- * only data that may be displayed to the operator.
+ * Filesystem paths and other send-authoritative state are deliberately
+ * excluded.  Values in this object are informational only; the send service
+ * re-resolves current invoice, customer, file, and mail state during POST.
  */
 final class InvoiceEmailPreview
 {

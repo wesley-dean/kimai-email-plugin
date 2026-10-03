@@ -11,8 +11,13 @@ invoice contents, customer identity and contact information, authorization
 state, the stored invoice document, mail configuration, and evidence that a
 send operation was attempted.
 
-This is design-stage disclosure.  Controls described as requirements are not
-evidence that implementation or runtime validation has already occurred.
+The source controls described here are implemented, and Phase 4 added automated
+unit and real-Kimai integration evidence for the principal authorization, CSRF,
+rendering, validation, and dispatch boundaries.
+
+The evidence remains bounded.  The automated mail transport is non-delivering,
+so external SMTP acceptance, mailbox delivery, and recipient receipt are not
+yet validated.
 
 ## Security Claims
 
@@ -36,9 +41,9 @@ The implementation is required to provide these properties:
    delivery.
 10. The Phase 3 implementation does not persist post-send audit metadata.
 
-The Phase 3 source implements these controls, but tests and runtime installation
-evidence are still required before they can be considered verified runtime
-properties.
+Phase 4 verified these controls at the automated-test boundary described in
+[testing.md](testing.md).  Claims about external delivery remain outside that
+evidence.
 
 ## Actors and Identities
 
@@ -334,10 +339,9 @@ normal log-protection policy.
 
 Exceptions that require more sensitive logging must be explicit and documented.
 
-## Evidence Plan
+## Automated Evidence
 
-Security claims will be supported by tests and review in later phases,
-including:
+Phase 4 provides tests and review evidence for:
 
 - GET produces no send side effect;
 - POST rejects missing or invalid CSRF;
