@@ -71,8 +71,12 @@ The integration layer verifies:
 - plugin Twig templates parse;
 - plugin XLIFF translations parse;
 - both plugin routes load;
-- a normal administrator without `email_invoice` cannot reach confirmation;
+- a normal administrator with invoice visibility but without `email_invoice`
+  cannot reach confirmation;
+- a user granted `email_invoice` but lacking `view_invoice` cannot reach
+  confirmation;
 - GET confirmation dispatches no email;
+- customer-controlled confirmation text remains HTML-escaped;
 - the send route rejects GET;
 - invalid CSRF POST dispatches no email;
 - one valid confirmation POST dispatches exactly one `EmailEvent`;
