@@ -13,18 +13,19 @@ transport was delivered to the recipient.
 
 The current maintained line targets Kimai 2.67.0.
 
-Release `v0.2.1` is the current published package.  The maintained package
-format is CI-verified against Kimai 2.67.0 with PHP 8.2, 8.3, 8.4, and 8.5.  The post-merge release gate built the
-deterministic ZIP, installed that packaged representation into Kimai, exercised
-plugin discovery, container compilation, routes, templates, translations,
-authorization, CSRF handling, invoice-file lookup, and email-event dispatch,
-then published those validated bytes.
+The maintained package format is CI-verified against Kimai 2.67.0 with PHP 8.2,
+8.3, 8.4, and 8.5.  For pushes to `main`, the post-merge release gate builds
+the deterministic ZIP, installs that packaged representation into Kimai,
+exercises plugin discovery, container compilation, routes, templates,
+translations, authorization, CSRF handling, invoice-file lookup, and
+email-event dispatch, then publishes only those validated bytes.
 
 The normal compatibility matrix intentionally uses a non-delivering mail
-transport.  Release `v0.2.1` has passed published-artifact staging validation through a
-real SMTP connection to a controlled Mailpit sink.  This
-establishes SMTP acceptance by that sink, not Internet delivery, mailbox
-receipt, or recipient reading.
+transport.  After publication, the read-only staging workflow validates the
+published artifact through a real SMTP connection to a controlled Mailpit sink.
+A successful staging run establishes SMTP acceptance by that sink, not Internet
+delivery, mailbox receipt, or recipient reading.  Version-specific staging
+evidence is retained in [Staging Validation](doc/staging-validation.md).
 
 See [Compatibility](doc/compatibility.md) and [Testing](doc/testing.md) for the
 evidence boundary.

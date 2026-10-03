@@ -5,6 +5,16 @@ All notable maintained changes to Kimai Invoice Emailer are recorded here.
 The repository uses Conventional Commit PR titles and squash-only merges.
 Release tags are created automatically from the commit type.
 
+## 0.2.3 - 2026-10-03
+
+### Documentation
+
+- Make maintained release-status wording version-neutral so an automatic patch
+  release does not immediately make the documentation stale.
+- Treat release-specific staging records as historical evidence rather than a
+  moving pointer to the latest release.
+- Record successful published-artifact staging evidence for `v0.2.2`.
+
 ## 0.2.2 - 2026-10-03
 
 ### Documentation
