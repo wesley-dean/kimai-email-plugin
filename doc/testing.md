@@ -18,6 +18,7 @@ The unit suite currently verifies:
 
 - preview performs no email dispatch;
 - current invoice/customer/file/sender values are resolved;
+- send re-resolves recipient state instead of trusting an earlier preview;
 - one successful send dispatches exactly one `EmailEvent`;
 - the message uses the expected recipient, subject, templates, and attachment;
 - the plugin deliberately leaves `From` unset for `KimaiMailer`;
@@ -111,7 +112,7 @@ Inside a Kimai 2.67.0 checkout with this repository copied to
 
 ```bash
 bin/console kimai:reload --env=test --no-interaction
-bin/console lint:container --env=test
+bin/console lint:container --env=prod
 bin/console lint:yaml var/plugins/InvoiceEmailerBundle/Resources/config --parse-tags
 bin/console lint:twig var/plugins/InvoiceEmailerBundle/Resources/views --show-deprecations
 bin/console lint:xliff var/plugins/InvoiceEmailerBundle/Resources/translations
