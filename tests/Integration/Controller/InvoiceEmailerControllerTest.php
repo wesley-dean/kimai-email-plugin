@@ -78,13 +78,18 @@ final class InvoiceEmailerControllerTest extends AbstractControllerBaseTestCase
      */
     public function testEmailPermissionWithoutInvoicePermissionCannotConfirm(): void
     {
+        $client = $this->getClientForAuthenticatedUser(User::ROLE_USER);
+
         $this->grantPermissions(
             User::ROLE_USER,
             'TEST_EMAIL_INVOICE_ONLY',
             ['email_invoice']
         );
 
-        $client = $this->getClientForAuthenticatedUser(User::ROLE_USER);
+        $client->loginUser(
+            $this->getUserByRole(User::ROLE_USER),
+            'secured_area'
+        );
         $invoice = $this->createSendableInvoice();
 
         $this->request(
@@ -230,6 +235,11 @@ final class InvoiceEmailerControllerTest extends AbstractControllerBaseTestCase
         self::assertTrue($client->getResponse()->isSuccessful());
         self::assertCount(0, $events);
 
+        $customer = $invoice->getCustomer();
+        self::assertNotNull($customer);
+        $customer->setEmail('invoice-recipient@example.com');
+        $this->getEntityManager()->flush();
+
         $form = $crawler
             ->filter('form[action*="/invoice/emailer/send/"]')
             ->form();
@@ -294,9 +304,6 @@ final class InvoiceEmailerControllerTest extends AbstractControllerBaseTestCase
         $invoice = $this->importFixture($fixture)[0];
         $customer = $invoice->getCustomer();
         self::assertNotNull($customer);
-
-        $customer->setEmail('invoice-recipient@example.com');
-        $this->getEntityManager()->flush();
 
         /** @var FileHelper $fileHelper */
         $fileHelper = self::getContainer()->get(FileHelper::class);
