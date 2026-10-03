@@ -23,6 +23,28 @@ This is not yet a production-delivery certification.  The integration matrix
 uses a non-delivering mail transport and does not establish external SMTP
 delivery or recipient receipt.
 
+## Phase 6 Distribution Validation
+
+Beginning with the Phase 6 packaging change, the compatibility workflow builds
+the release-equivalent `InvoiceEmailerBundle-<version>.zip`, verifies a
+byte-identical rebuild and SHA-256 sidecar, extracts that artifact directly
+beneath Kimai's `var/plugins/`, and executes the existing integration suite
+against the packaged runtime code.
+
+For pushes to `main`, release publication is a final stage of the same
+compatibility workflow.  A read-only release-candidate job depends directly on
+the successful PHP 8.2 through 8.5 unit and integration matrices and uploads
+only validated release bytes.  A separate write-capable publish job does not
+check out or execute repository source; it re-verifies those bytes before
+creating the semantic-version tag and GitHub release.
+
+The last already-published compatibility statement remains the historical
+`v0.1.1` evidence above until the first packaged release completes this gate.
+The expected first release under ADR-004 is `v0.2.0`.
+
+See [release.md](release.md) and
+[ADR-004](adr/ADR-004-deterministic-release-artifacts.md).
+
 ## Verified Target
 
 | Component | Verified target | Evidence |
@@ -51,7 +73,10 @@ For every PHP version in the matrix, the Phase 4 workflow:
 - runs PHPStan;
 - runs the unit suite;
 - checks out the exact Kimai 2.67.0 tag;
-- installs the plugin under `var/plugins/InvoiceEmailerBundle/`;
+- builds the deterministic release ZIP twice and compares the outputs;
+- verifies the release checksum;
+- installs the packaged plugin under
+  `var/plugins/InvoiceEmailerBundle/`;
 - reloads Kimai with the plugin present;
 - validates the production dependency container;
 - lints plugin YAML;
@@ -208,5 +233,7 @@ When adding a version:
 - [Architecture](architecture.md)
 - [Security](security.md)
 - [Testing](testing.md)
+- [Release Packaging](release.md)
 - [Upstream Provenance](../UPSTREAM.md)
 - [ADR-003](adr/ADR-003-secured-manual-invoice-email-workflow.md)
+- [ADR-004](adr/ADR-004-deterministic-release-artifacts.md)

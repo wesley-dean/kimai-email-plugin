@@ -42,6 +42,17 @@ and stronger idempotency are separate future decisions because they introduce
 additional state and failure-ordering concerns.  See
 [ADR-003](ADR-003-secured-manual-invoice-email-workflow.md).
 
+### ADR-004: Define Deterministic Kimai Release Artifacts
+
+The supported release package is a deterministic ZIP named
+`InvoiceEmailerBundle-<version>.zip` whose internal root is the final Kimai
+bundle directory, `InvoiceEmailerBundle/`.  The package excludes development
+material, carries license/provenance files and a SHA-256 sidecar, and is tested
+as the installed artifact rather than inferred from source tests.  Release tags
+are created only after the validated main-branch commit has produced and
+verified its package.  See
+[ADR-004](ADR-004-deterministic-release-artifacts.md).
+
 <!-- adrctl-generated-footer -->
 
 ## Complete ADR Inventory
@@ -50,3 +61,4 @@ additional state and failure-ordering concerns.  See
 - [ADR-001: Adopt Released Coding Standards](ADR-001-adopt-released-coding-standards.md)
 - [ADR-002: Adopt MIT License for Project-Owned Work](ADR-002-adopt-mit-license.md)
 - [ADR-003: Establish a Secured Manual Invoice Email Workflow](ADR-003-secured-manual-invoice-email-workflow.md)
+- [ADR-004: Define Deterministic Kimai Release Artifacts](ADR-004-deterministic-release-artifacts.md)

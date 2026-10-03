@@ -252,6 +252,8 @@ Any later automatic-send feature requires a separate ADR covering at least:
 ## Related Documents
 
 - [ADR-003](adr/ADR-003-secured-manual-invoice-email-workflow.md)
+- [ADR-004](adr/ADR-004-deterministic-release-artifacts.md)
 - [Security](security.md)
 - [Compatibility](compatibility.md)
+- [Release Packaging](release.md)
 - [Upstream Provenance](../UPSTREAM.md)

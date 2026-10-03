@@ -5,9 +5,9 @@
 This document records how Kimai Invoice Emailer is verified and which evidence
 supports its compatibility and security claims.
 
-Tests are split into two layers because the plugin contains application logic
-that can be tested in isolation and framework/security behavior that is only
-meaningful inside a real Kimai kernel.
+Verification is split into source, distribution-artifact, and integration
+layers.  Application logic can be tested in isolation, while packaging and
+framework/security behavior require the public ZIP and a real Kimai kernel.
 
 ## Evidence Bound to Release v0.1.1
 
@@ -58,18 +58,44 @@ The standalone layer also runs:
 - PHPStan; and
 - PHPUnit.
 
+## Distribution Artifact Layer
+
+The compatibility workflow builds the public release representation before
+starting Kimai integration tests.
+
+For each PHP matrix cell it:
+
+1. reads the package version from `composer.json`;
+2. builds `InvoiceEmailerBundle-<version>.zip`;
+3. builds the same archive a second time;
+4. compares both ZIPs byte-for-byte;
+5. compares both SHA-256 sidecars byte-for-byte;
+6. extracts the first ZIP directly beneath Kimai's `var/plugins/`; and
+7. confirms that runtime/legal files are present while tests, documentation
+   governance, CI configuration, and release scripts are absent.
+
+The builder itself also verifies archive integrity, the required
+`InvoiceEmailerBundle/` top-level directory, required runtime files, prohibited
+development paths, and the SHA-256 checksum.
+
+See [release.md](release.md) and
+[ADR-004](adr/ADR-004-deterministic-release-artifacts.md).
+
 ## Kimai Integration Layer
 
 The integration workflow checks out the exact Kimai 2.67.0 tag and installs the
-current plugin checkout under:
+generated release ZIP under:
 
 ```text
 var/plugins/InvoiceEmailerBundle/
 ```
 
-It then exercises the plugin against Kimai's own application, test kernel,
-MySQL-backed fixtures, security system, CSRF manager, route loader, and mail
-event path.
+The integration test source remains in the repository checkout outside the
+installed plugin and executes against the packaged runtime code.
+
+The workflow then exercises the plugin against Kimai's own application, test
+kernel, MySQL-backed fixtures, security system, CSRF manager, route loader, and
+mail event path.
 
 The integration layer verifies:
 
@@ -126,8 +152,15 @@ composer install
 composer quality
 ```
 
-Inside a Kimai 2.67.0 checkout with the repository copied to
-`var/plugins/InvoiceEmailerBundle/`, the production-facing checks include:
+Build and verify the release ZIP:
+
+```bash
+scripts/build-release.bash 0.2.0 dist
+sha256sum -c dist/InvoiceEmailerBundle-0.2.0.zip.sha256
+```
+
+Inside a Kimai 2.67.0 checkout with the generated ZIP extracted beneath
+`var/plugins/`, the production-facing checks include:
 
 ```bash
 bin/console kimai:reload --env=prod --no-interaction
@@ -157,9 +190,14 @@ release with a controlled SMTP sink or controlled recipient.
 
 Passing the unit suite alone does not establish Kimai runtime compatibility.
 
-Passing production container/template/route checks establishes plugin loading
-for the tested combination, while the controller integration suite establishes
-the tested authorization, CSRF, rendering, and dispatch behavior.
+Passing source-level integration alone also does not establish that the public
+distribution transformation preserved behavior.  Beginning with Phase 6, the
+compatibility workflow installs the generated ZIP before exercising Kimai.
+
+Passing production container/template/route checks against that installed
+artifact establishes plugin loading for the tested combination, while the
+controller integration suite establishes the tested authorization, CSRF,
+rendering, and dispatch behavior.
 
 Neither layer establishes:
 
