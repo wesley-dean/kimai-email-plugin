@@ -142,6 +142,65 @@ final class InvoiceEmailServiceTest extends TestCase
         self::assertCount(1, $message->getAttachments());
     }
 
+
+    /**
+     * Verify send re-resolves recipient state after an earlier preview.
+     *
+     * @return void
+     */
+    public function testSendRevalidatesRecipientAfterPreview(): void
+    {
+        $invoice = $this->createInvoice();
+        $file = $this->createInvoiceFile();
+
+        $invoiceService = $this->createMock(InvoiceService::class);
+        $invoiceService
+            ->expects(self::exactly(2))
+            ->method('getInvoiceFile')
+            ->with($invoice)
+            ->willReturn(new \SplFileInfo($file));
+
+        $captured = null;
+        $dispatcher = $this->createMock(EventDispatcherInterface::class);
+        $dispatcher
+            ->expects(self::once())
+            ->method('dispatch')
+            ->with(self::callback(
+                static function (object $event) use (&$captured): bool {
+                    if (!$event instanceof EmailEvent) {
+                        return false;
+                    }
+
+                    $captured = $event;
+
+                    return true;
+                }
+            ))
+            ->willReturnArgument(0);
+
+        $service = $this->createService(
+            $invoiceService,
+            $dispatcher,
+            new MailConfiguration('sender@example.com')
+        );
+
+        $preview = $service->preview($invoice);
+        self::assertSame('billing@example.com', $preview->recipient);
+
+        $customer = $invoice->getCustomer();
+        self::assertNotNull($customer);
+        $customer->setEmail('current-billing@example.com');
+
+        $service->send($invoice);
+
+        self::assertInstanceOf(EmailEvent::class, $captured);
+        self::assertCount(1, $captured->getEmail()->getTo());
+        self::assertSame(
+            'current-billing@example.com',
+            $captured->getEmail()->getTo()[0]->getAddress()
+        );
+    }
+
     /**
      * Verify canceled invoices are rejected before file or mail interaction.
      *
