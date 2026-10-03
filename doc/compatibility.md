@@ -31,9 +31,12 @@ byte-identical rebuild and SHA-256 sidecar, extracts that artifact directly
 beneath Kimai's `var/plugins/`, and executes the existing integration suite
 against the packaged runtime code.
 
-The release workflow is downstream of a successful compatibility run on
-`main`.  A semantic-version tag and GitHub release are therefore created only
-after the main-branch commit has passed the full PHP 8.2 through 8.5 matrix.
+For pushes to `main`, release publication is a final stage of the same
+compatibility workflow.  A read-only release-candidate job depends directly on
+the successful PHP 8.2 through 8.5 unit and integration matrices and uploads
+only validated release bytes.  A separate write-capable publish job does not
+check out or execute repository source; it re-verifies those bytes before
+creating the semantic-version tag and GitHub release.
 
 The last already-published compatibility statement remains the historical
 `v0.1.1` evidence above until the first packaged release completes this gate.
