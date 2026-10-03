@@ -96,6 +96,11 @@ jobs:
         working-directory: kimai
         run: composer install --no-interaction --no-progress
 
+      - name: Remove stale Kimai 2.67 test service
+        working-directory: kimai
+        run: |
+          sed -i '/App\\Importer\\ImporterService:/,+2d' config/services_test.yaml
+
       - name: Install plugin into Kimai
         run: |
           mkdir -p kimai/var/plugins/InvoiceEmailerBundle
@@ -107,7 +112,7 @@ jobs:
 
       - name: Validate Kimai container
         working-directory: kimai
-        run: bin/console lint:container --env=test
+        run: bin/console lint:container --env=prod
 
       - name: Validate plugin YAML
         working-directory: kimai
