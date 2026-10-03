@@ -27,12 +27,26 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * Provides the human-confirmed manual invoice email workflow.
+ * Owns the HTTP boundary for the human-confirmed invoice email workflow.
+ *
+ * Confirmation is a side-effect-free GET.  Sending is a separate POST that
+ * repeats authorization, validates a per-invoice CSRF token, and then invokes
+ * the application service.  The controller never accepts recipient, sender,
+ * subject, or attachment path as send-authoritative form input.
+ *
+ * These boundaries implement ADR-003.
+ *
+ * @see \KimaiPlugin\InvoiceEmailerBundle\Service\InvoiceEmailService
  */
 #[Route(path: '/invoice/emailer')]
 #[IsGranted('IS_AUTHENTICATED_FULLY')]
 final class InvoiceEmailerController extends AbstractController
 {
+    /**
+     * Namespace for CSRF token identifiers bound to a specific invoice ID.
+     *
+     * @var string
+     */
     private const CSRF_PREFIX = 'invoice_emailer.send.';
 
     /**
@@ -52,6 +66,8 @@ final class InvoiceEmailerController extends AbstractController
      *
      * @param Invoice $invoice Invoice resolved by Kimai from the route ID.
      * @param Request $request Current HTTP request.
+     * This method does not dispatch email or modify invoice state.
+     *
      * @return Response Confirmation page or redirect on validation failure.
      */
     #[Route(
@@ -87,6 +103,9 @@ final class InvoiceEmailerController extends AbstractController
      *
      * @param Invoice $invoice Invoice resolved by Kimai from the route ID.
      * @param Request $request Current HTTP request containing the CSRF token.
+     * Authorization and send-authoritative state are evaluated at POST time;
+     * the earlier confirmation page is not treated as authority.
+     *
      * @return RedirectResponse Redirect to the invoice listing.
      */
     #[Route(
@@ -137,6 +156,10 @@ final class InvoiceEmailerController extends AbstractController
 
     /**
      * Enforce all authorization boundaries required by ADR-003.
+     *
+     * The caller must possess `email_invoice`, normal `view_invoice`
+     * authorization for this exact invoice, and applicable access to its
+     * customer.
      *
      * @param Invoice $invoice Invoice being accessed.
      * @return void

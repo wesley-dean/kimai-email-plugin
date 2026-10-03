@@ -18,7 +18,12 @@ use App\Event\PageActionsEvent;
 use App\EventSubscriber\Actions\AbstractActionsSubscriber;
 
 /**
- * Adds the authorized manual-send action to invoice rows.
+ * Adds the manual-send action only for invoices the current user may email.
+ *
+ * Visibility is intentionally constrained by the same authorization layers
+ * enforced again by the controller: `email_invoice`, invoice visibility, and
+ * customer access.  Hiding the action is a usability aid, not the security
+ * boundary; the controller remains authoritative.
  */
 final class InvoiceActionsSubscriber extends AbstractActionsSubscriber
 {
@@ -34,6 +39,9 @@ final class InvoiceActionsSubscriber extends AbstractActionsSubscriber
 
     /**
      * Add a confirmation link when the current invoice can be emailed.
+     *
+     * Canceled invoices, invoices without a customer, and invoices outside the
+     * current user's authorization scope receive no plugin action.
      *
      * @param PageActionsEvent $event Current invoice-row action event.
      * @return void

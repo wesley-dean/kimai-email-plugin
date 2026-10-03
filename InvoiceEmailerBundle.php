@@ -16,6 +16,13 @@ use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 /**
  * Provides the Kimai bundle entry point for the Invoice Emailer plugin.
+ *
+ * Kimai discovers this bundle from `var/plugins/InvoiceEmailerBundle/` and
+ * loads its dependency-injection extension, routes, services, translations,
+ * and templates through Kimai's plugin mechanism.  The bundle itself owns no
+ * mutable runtime state.
+ *
+ * @see \KimaiPlugin\InvoiceEmailerBundle\DependencyInjection\InvoiceEmailerExtension
  */
 class InvoiceEmailerBundle extends Bundle implements PluginInterface
 {

@@ -1,105 +1,274 @@
-# template
+# Kimai Invoice Emailer
 
-## Description
+Kimai Invoice Emailer adds a secured, human-confirmed workflow for emailing an
+existing Kimai invoice to the email address stored on its customer.
 
-This is a template for a README.md file. It is a markdown file that is used to
-describe a project. It is used to provide information about the project to the
-users and contributors. It is a good practice to have a README.md file in your
-project repository.
+The maintained plugin is deliberately narrow.  It sends an invoice only after
+an authorized user opens a confirmation page and explicitly submits a
+CSRF-protected form.  It does not automatically send invoices, change invoice
+status, retry failed sends, or claim that mail accepted by the configured
+transport was delivered to the recipient.
+
+## Status
+
+The current maintained line targets Kimai 2.67.0.
+
+Kimai 2.67.0 with PHP 8.2, 8.3, 8.4, and 8.5 is CI-verified by installing the
+plugin into the exact Kimai 2.67.0 source tree and exercising plugin discovery,
+container compilation, routes, templates, translations, authorization, CSRF
+handling, invoice-file lookup, and email-event dispatch.
+
+The automated mail transport is intentionally non-delivering.  Production-like
+SMTP delivery remains a later validation phase, so CI success must not be read
+as proof of external mail delivery or recipient receipt.
+
+See [Compatibility](doc/compatibility.md) and [Testing](doc/testing.md) for the
+evidence boundary.
+
+## Features
+
+- Adds an "Email invoice" action to eligible invoice rows.
+- Requires an explicit confirmation GET before the send operation.
+- Performs the email side effect only through a CSRF-protected POST.
+- Requires the dedicated `email_invoice` permission.
+- Also requires normal `view_invoice` authorization for the specific invoice.
+- Retains applicable customer/object access checks.
+- Uses Kimai's current `InvoiceService` to resolve the generated invoice file.
+- Builds a Symfony `TemplatedEmail`.
+- Dispatches through Kimai's `EmailEvent` and `KimaiMailer` integration.
+- Re-resolves send-authoritative state at POST time instead of trusting values
+  shown on the confirmation page.
+- Keeps the initial email intentionally sparse and locale-neutral.
+- Preserves upstream MIT provenance for concepts derived from the ADK plugin.
+
+## Deliberate Non-Features
+
+The current maintained release does not provide:
+
+- automatic sending on invoice creation or update;
+- automatic invoice status changes;
+- automatic retry;
+- bulk sending;
+- arbitrary additional recipients;
+- delivery receipts;
+- post-send `email_sent_date` metadata; or
+- exactly-once delivery semantics.
+
+Those omissions are architectural decisions, not unfinished switches hidden in
+configuration.  See
+[ADR-003](doc/adr/ADR-003-secured-manual-invoice-email-workflow.md).
+
+## Requirements
+
+The verified compatibility target is:
+
+| Component | Supported target |
+| --- | --- |
+| Kimai | 2.67.0 |
+| PHP | 8.2, 8.3, 8.4, 8.5 |
+| Mail | Kimai's configured Symfony Mailer transport |
+
+The plugin does not create database tables and does not install frontend assets.
+
+Support for other Kimai versions must be established by evidence rather than
+inferred from upstream metadata.  See [Compatibility](doc/compatibility.md).
+
+## Installation
+
+Kimai plugins are installed below `var/plugins/`, and Kimai expects this bundle
+to live at exactly:
+
+```text
+var/plugins/InvoiceEmailerBundle/
+```
+
+The directory must contain `InvoiceEmailerBundle.php` at its root.
+
+Until Phase 6 introduces a deterministic release archive, install from a
+specific Git release tag rather than from a moving branch.  From the Kimai
+application directory:
+
+```bash
+git clone \
+  --branch v0.1.1 \
+  --depth 1 \
+  https://github.com/wesley-dean/kimai-email-plugin.git \
+  var/plugins/InvoiceEmailerBundle
+
+bin/console kimai:reload --env=prod
+```
+
+For a later release, replace `v0.1.1` with the release tag you intend to
+deploy.
+
+Kimai's plugin documentation requires the exact bundle directory name and a
+cache rebuild after installation.  This plugin has no database-install command
+and no asset-install step.
+
+Official Kimai plugin-management documentation:
+https://www.kimai.org/documentation/plugin-management.html
+
+### Docker installations
+
+When Kimai runs in a container, the plugin still belongs under Kimai's
+`var/plugins/` directory.  The directory is commonly provided through a volume
+or bind mount.
+
+Official Kimai Docker Compose documentation:
+https://www.kimai.org/documentation/docker-compose.html
+
+After the plugin is visible inside the container, run the production reload
+command in that Kimai container.
+
+## Permissions
+
+The plugin introduces the `email_invoice` permission.
+
+It is granted to `ROLE_SUPER_ADMIN` by default.  Kimai administrators may
+assign it to other roles through Kimai's normal permission-management
+interface.
+
+The custom permission is intentionally insufficient by itself.  A user must
+also be authorized to view the specific invoice and must satisfy applicable
+customer/object access rules.
+
+If the invoice action is not visible, verify all of the following:
+
+- the invoice is not canceled;
+- the current user has `email_invoice`;
+- the current user has `view_invoice` for that invoice; and
+- the current user may access the invoice customer.
+
+## Configuration
+
+The plugin has no plugin-specific configuration file.
+
+It relies on existing Kimai state:
+
+- the customer's email address;
+- the generated invoice document;
+- Kimai's configured mail sender;
+- Kimai's configured Symfony Mailer transport; and
+- Kimai's permission and object-access model.
+
+A missing customer email, unreadable generated invoice, canceled invoice, or
+missing Kimai sender configuration prevents the send.
 
 ## Usage
 
-You can use this template to create a README.md file for your project. You can
+1. Open Kimai's invoice list.
+2. Choose the "Email invoice" action for an eligible invoice.
+3. Review the confirmation page.  It shows the invoice number, customer,
+   recipient, sender, subject, and attachment filename.
+4. Submit the confirmation form.
+5. Kimai submits the message through its configured mail system.
 
-- Clone this repository
-- Copy the README.md file to your project repository
-- Edit the file to add information about your project
+The confirmation page is observational.  Merely opening it does not send the
+invoice.
 
-### Environment Variables
+The success message means the invoice email was submitted through Kimai's mail
+pipeline.  It does not mean the remote server accepted the message, the message
+reached the recipient's mailbox, or the recipient read it.
 
-There are three environment variables that need to be set for this project to
-work correctly:
+## Email Content
 
-- `PAT` - Your GitHub Personal Access Token
-- `GPG_PRIVATE_KEY` - Your GPG Private Key
-- `GPG_PRIVATE_KEY_PASSPHRASE` - Your GPG Private Key Passphrase
+The first maintained message intentionally avoids duplicating financial values
+or locale-sensitive invoice data in the email body.
 
-The `PAT` environment variable is used by MegaLinter to authenticate with the
-GitHub API. The `GPG_PRIVATE_KEY` and `GPG_PRIVATE_KEY_PASSPHRASE` environment
-variables are used to sign the commits that MegaLinter creates when
-`APPLY_FIXES` is set to `true`.
+The subject contains the invoice number.  The body states that the invoice is
+attached.  The attachment is the already-generated Kimai invoice document.
 
-If the MegaLinter action is disabled, none of these environment variables are
-required.
+## Security Model
 
-### Conventional Commits
+The security-sensitive boundary is the external transmission of an invoice
+document.
 
-This project uses Conventional Commits. Conventional Commits is a specification
-for adding human and machine readable meaning to commit messages. It is a
-lightweight convention on top of commit messages. The specification can be
-found at [conventionalcommits.org](https://www.conventionalcommits.org/).
+The maintained workflow uses:
 
-Specifically, this project uses the
-[bitshifted/git-auto-semver](https://github.com/bitshifted/git-auto-semver)
-action to automatically increment the version number based on the commit
-messages:
+- authentication;
+- the dedicated `email_invoice` permission;
+- specific-invoice `view_invoice` authorization;
+- customer/object authorization;
+- a side-effect-free GET confirmation step;
+- a per-invoice CSRF-protected POST send step;
+- current authoritative recipient and file resolution at send time; and
+- Kimai's own mail integration rather than a parallel transport configuration.
 
+See [Security Model](doc/security.md) for the threat model and evidence map.
+See [Security Policy](SECURITY.md) for vulnerability reporting.
 
-- `build`, `chore`, `ci`, `docs`, `fix`, `perf`, `refactor`, `revert`,
-  `style`, `test`: bump micro (patch) number
-- `feat`: bump minor version number
-- `BREAKING CHANGE`: bump major version number
+## Testing
 
-## Documentation
+The repository has two automated verification layers.
 
-### Architecture Decision Records (ADRs)
+The standalone layer runs Composer validation, PHPStan, and unit tests against
+Kimai 2.67.0 on PHP 8.2 through 8.5.
 
-This project is configured to use [Nat Pryce's](https://github.com/npryce)
-[adr-tools](https://github.com/npryce/adr-tools) project.  There is a template
-at `doc/adrs/templates/template.md` which can be edited at-will.  The ADR
-template is built to support both human and machine (AI/LLM)-produced and
-maintained ADRs.  The configuration file, `.adr-dir` resides at the root of
-the project and may be updated if ADRs are to be stored in an alternate
-directory.
+The integration layer installs the plugin into the exact Kimai 2.67.0 source
+tree and exercises the real Kimai kernel, MySQL-backed fixtures, authorization,
+CSRF handling, plugin routes, templates, translations, and email-event
+dispatch.
 
-For more information about ADRs, check out
-[Michael Nygard](https://cognitect.com/authors/MichaelNygard.html)'s
-[article](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions)
-on the topic.
+Run the standalone checks with:
 
-## Coding Standards
+```bash
+composer install
+composer quality
+```
 
-This repository adopts released coding standards from
-[wesley-dean/coding_standards](https://github.com/wesley-dean/coding_standards).
-The committed snapshot lives under `doc/standards/`, and
-`.codingstandardrc` records the concrete adopted release and verified release
-artifact digest.
+See [Testing](doc/testing.md) for the integration harness, the Kimai 2.67.0
+test-environment shims, and the exact evidence boundary.
 
-Applicable standards are governing project requirements, subject to explicit
-repository-specific governance such as accepted ADRs.  Presence does not imply
-applicability: general standards apply where relevant, language-specific
-standards apply to maintained content in that language, and
-`doc/standards/examples/` is illustrative unless a governing standard says
-otherwise.  Do not edit the imported standards locally; project-specific
-exceptions belong in repository governance.
+## Architecture and Governance
 
-## License
+The maintained design is documented in:
 
-Project-owned work is licensed under the MIT License.  Third-party material,
-when present, retains its original copyright and license notices.  See the
-[LICENSE](LICENSE) file and repository provenance documentation for details.
+- [Architecture](doc/architecture.md)
+- [Architecture Decision Records](doc/adr/README.md)
+- [Decision Summary](doc/decisions.md)
+- [Security Model](doc/security.md)
+- [Compatibility](doc/compatibility.md)
+- [Testing](doc/testing.md)
+- [Upstream Provenance](UPSTREAM.md)
+
+Repository work is also governed by the released coding standards committed
+under `doc/standards/`.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
+
+## Upstream Provenance
+
+This project substantially modernizes concepts from the MIT-licensed ADK
+Interactive Invoice Emailer plugin.  The selected provenance base is commit:
+
+```text
+da0a4c7eb38b0d1d99d89c4c3302776e5ab4d07f
+```
+
+The maintained implementation is not a verbatim continuation of the upstream
+architecture.  Known unsafe, obsolete, or defective behavior was deliberately
+excluded.
+
+See [UPSTREAM.md](UPSTREAM.md) for the provenance record.
+
+## Support
+
+For usage problems or reproducible defects, see [SUPPORT.md](SUPPORT.md).
+
+For security vulnerabilities, use the private reporting path documented in
+[SECURITY.md](SECURITY.md).
 
 ## Contributing
 
-Contributions are welcome. Please read the [CONTRIBUTING.md](CONTRIBUTING.md)
-file for details.
+Contributions are welcome.  Read [CONTRIBUTING.md](CONTRIBUTING.md),
+[AGENTS.md](AGENTS.md), the applicable standards under `doc/standards/`, and
+the accepted ADRs before changing governed behavior.
 
-### Code of Conduct
+## License
 
-Please read the [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) file for details on
-the code of conduct.  Long story short, be nice to each other and treat each
-other with respect, compassion, and empathy, especially when you disagree.
+Project-owned work is licensed under the MIT License.  Third-party material
+retains its original copyright and license obligations.
 
-## Authors
-
-- Wes Dean
+See [LICENSE](LICENSE) and [UPSTREAM.md](UPSTREAM.md).

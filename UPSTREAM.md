@@ -101,10 +101,12 @@ The first maintained implementation will deliberately not import or preserve:
 
 ## Compatibility Baseline
 
-The first implementation target is Kimai 2.67.0.  Runtime compatibility is not
-yet certified.  Compatibility claims must be based on executed tests against
-specific Kimai and PHP versions rather than inherited upstream version
-constraints.
+The maintained implementation target is Kimai 2.67.0.  Release `v0.1.1` is
+CI-verified against Kimai 2.67.0 on PHP 8.2, 8.3, 8.4, and 8.5.
+
+That verification does not expand the historical upstream compatibility claim
+and does not prove external SMTP delivery.  Compatibility claims remain bound
+to executed evidence for specific Kimai and PHP versions.
 
 See [doc/compatibility.md](doc/compatibility.md) for the maintained compatibility
 record.
