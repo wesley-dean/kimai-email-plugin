@@ -9,9 +9,10 @@ The first release is intentionally narrow.  It provides a human-initiated,
 secured workflow for sending an already-generated Kimai invoice to the email
 address associated with that invoice's customer.
 
-Automatic sending, automatic invoice status transitions, additional recipients,
-and queued/outbox delivery are outside this architecture unless a later
-accepted ADR introduces them.
+ADR-005 extends this architecture with opt-in creation-time automatic sending.
+Automatic sending on ordinary updates, automatic invoice status transitions,
+additional recipients, retries, and queued/outbox delivery remain outside the
+accepted architecture unless a later ADR introduces them.
 
 ## Architectural Baseline
 
@@ -35,14 +36,17 @@ to `InvoiceService`.
 
 ## Architectural Goal
 
-The plugin should make the consequential boundary obvious:
+The plugin keeps two consequential boundaries explicit:
 
-> an authorized human reviews a specific invoice-email operation and explicitly
-> submits it.
+> manual sending is reviewed and explicitly submitted by an authorized human;
 
-The controller owns HTTP concerns.  The application service owns send
-preconditions and message construction.  Kimai owns invoice-file resolution,
-mail configuration, and transport dispatch.
+> automatic sending occurs only after explicit deployment opt-in and only when
+> an authenticated authorized user creates a new invoice.
+
+The controller owns manual HTTP concerns.  The automatic policy service owns
+creation-event eligibility and failure containment.  The shared application
+service owns send preconditions and message construction.  Kimai owns
+invoice-file resolution, mail configuration, and transport dispatch.
 
 ## Request and Delivery Flow
 
@@ -131,6 +135,22 @@ from request-controlled values.
 The service should build a Symfony `TemplatedEmail` and dispatch it through
 Kimai's `EmailEvent` rather than bypassing Kimai's email integration.
 
+### Automatic creation subscriber
+
+When `INVOICE_EMAILER_AUTO_SEND=1`, the automatic subscriber observes only
+Kimai's `InvoiceCreatedEvent`.  It does not subscribe to
+`InvoiceUpdatePostEvent`, so ordinary edits and status updates cannot become
+implicit resend triggers.
+
+The automatic policy requires a current authenticated Kimai user and reuses the
+same `email_invoice`, specific-invoice `view_invoice`, and customer-access
+authorization boundaries as the manual workflow.  It delegates message
+construction and dispatch to `InvoiceEmailService`.
+
+Automatic failures are contained and logged after invoice persistence.  They
+are not rethrown through the creation event, do not change invoice status, and
+do not retry automatically.  Manual send remains the recovery path.
+
 ### Kimai mail boundary
 
 The plugin delegates the final mail operation to Kimai:
@@ -190,11 +210,12 @@ The mail system itself can still accept, queue, delay, reject, or otherwise
 process a message after Kimai submits it.  The plugin therefore must not claim
 recipient delivery or exactly-once semantics.
 
-The initial manual workflow mitigates uncertainty with:
+The maintained workflows mitigate uncertainty with:
 
-- explicit human confirmation;
-- no automatic retry;
-- no automatic sending; and
+- explicit human confirmation for manual sending;
+- explicit deployment opt-in for creation-time automation;
+- creation-only automatic triggering;
+- no automatic retry; and
 - clear operational logging without unnecessary recipient disclosure.
 
 A stronger delivery guarantee would require a different architecture, such as
@@ -214,15 +235,17 @@ The first maintained release must preserve these invariants:
 8. Canceled invoices are not sent.
 9. The plugin dispatches through Kimai's `EmailEvent`.
 10. Manual sending does not automatically change invoice status.
-11. No automatic-send event subscriber is part of the first release.
-12. "Sent" or "accepted by the configured mail transport" must not be described
+11. Automatic sending, when enabled, observes only `InvoiceCreatedEvent`.
+12. Automatic sending requires an authenticated authorized Kimai user.
+13. Automatic-send failures do not roll back or obscure invoice creation.
+14. "Sent" or "accepted by the configured mail transport" must not be described
     as confirmed recipient delivery.
 
 ## Deliberate Non-Goals
 
 The first release does not provide:
 
-- automatic sending on invoice creation;
+- automatic sending on ordinary invoice updates;
 - automatic sending on invoice status updates;
 - `New -> Pending` transitions;
 - post-send `PAID` transitions;
@@ -235,24 +258,16 @@ The first release does not provide:
 
 ## Future Automation
 
-Kimai 2.67.0 provides `InvoiceUpdatePostEvent`, which is documented as firing
-after both new and updated invoices are saved.  It is a plausible future
-integration point, but it is not part of the first release.
-
-Any later automatic-send feature requires a separate ADR covering at least:
-
-- creation versus update semantics;
-- recursion;
-- idempotency;
-- persistence authority;
-- retries;
-- mail-versus-database failure ordering; and
-- the interaction between manual resend and automatic behavior.
+ADR-005 deliberately stops at creation-time automation.  Kimai's broader
+`InvoiceUpdatePostEvent` fires for both creation and later saves, so adopting
+it would require a new decision covering update semantics, durable idempotency,
+recursion, retries, persistence authority, and interaction with manual resend.
 
 ## Related Documents
 
 - [ADR-003](adr/ADR-003-secured-manual-invoice-email-workflow.md)
 - [ADR-004](adr/ADR-004-deterministic-release-artifacts.md)
+- [ADR-005](adr/ADR-005-opt-in-creation-time-automatic-invoice-email.md)
 - [Security](security.md)
 - [STRIDE Threat Model](thread_model.md)
 - [Compatibility](compatibility.md)
