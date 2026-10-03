@@ -205,10 +205,15 @@ See [staging-validation.md](staging-validation.md).
 The normal compatibility matrix uses a non-delivering mail transport.
 
 The Phase 7 staging layer crosses an actual SMTP protocol boundary to a local,
-controlled Mailpit sink.  This establishes SMTP acceptance by that sink for the
-tested packaged release.  It still does not establish Internet delivery,
-deliverability through filtering systems, recipient mailbox receipt, or
-recipient reading.
+controlled Mailpit sink.  Release `v0.2.0` passed this layer in workflow run
+`37089873036`: the published ZIP installed successfully, the controller
+manual-send contract passed, the packaged send service ran under Kimai's prod
+kernel, and Mailpit captured the expected invoice message and exact attachment
+bytes.
+
+This establishes SMTP acceptance by that controlled sink for `v0.2.0`.  It
+still does not establish Internet delivery, deliverability through filtering
+systems, recipient mailbox receipt, or recipient reading.
 
 ## Evidence Boundaries
 
