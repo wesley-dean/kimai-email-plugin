@@ -31,6 +31,17 @@ import must therefore carry explicit upstream provenance and preserve its MIT
 notice.  See
 [ADR-002](ADR-002-adopt-mit-license.md).
 
+### ADR-003: Establish a Secured Manual Invoice Email Workflow
+
+The first maintained release provides human-initiated invoice email only,
+through a side-effect-free confirmation GET and a CSRF-protected POST.  Sending
+requires the dedicated email permission plus normal authorization to view the
+specific invoice, uses `InvoiceService` and Kimai's `EmailEvent` mail path,
+and does not automatically alter invoice status.  Automatic sending, retries,
+and stronger idempotency are separate future decisions because they introduce
+additional state and failure-ordering concerns.  See
+[ADR-003](ADR-003-secured-manual-invoice-email-workflow.md).
+
 <!-- adrctl-generated-footer -->
 
 ## Complete ADR Inventory
@@ -38,3 +49,4 @@ notice.  See
 - [ADR-000: Capability Scope, Epistemic Honesty, and Separation of Concerns](ADR-000-capability-scope-and-epistemic-honesty.md)
 - [ADR-001: Adopt Released Coding Standards](ADR-001-adopt-released-coding-standards.md)
 - [ADR-002: Adopt MIT License for Project-Owned Work](ADR-002-adopt-mit-license.md)
+- [ADR-003: Establish a Secured Manual Invoice Email Workflow](ADR-003-secured-manual-invoice-email-workflow.md)

@@ -27,3 +27,14 @@ license notices.  The planned ADK plugin import must record its upstream source
 and preserve the upstream MIT notice rather than presenting imported code as
 solely project-owned.  See
 [ADR-002](adr/ADR-002-adopt-mit-license.md).
+
+## Secured Manual Invoice Email Workflow
+
+The first maintained implementation sends invoices only through an explicit
+human workflow: a side-effect-free confirmation GET followed by an authorized,
+CSRF-protected POST.  It uses current Kimai invoice and mail integration,
+requires normal access to the specific invoice in addition to the custom email
+permission, and performs no automatic invoice status transition.  Automation,
+retries, and stronger delivery/idempotency semantics remain separate future
+architecture work.  See
+[ADR-003](adr/ADR-003-secured-manual-invoice-email-workflow.md).
