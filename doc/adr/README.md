@@ -21,9 +21,20 @@ standards are not edited locally; future changes use deliberate release
 adoption.  See
 [ADR-001](ADR-001-adopt-released-coding-standards.md).
 
+### ADR-002: Adopt MIT License for Project-Owned Work
+
+New project-owned work is distributed under the MIT License, while rights
+already granted for historical CC0 material are not revoked.  Third-party code
+must preserve its original copyright, attribution, and license obligations
+instead of being represented as project-owned work.  The planned ADK plugin
+import must therefore carry explicit upstream provenance and preserve its MIT
+notice.  See
+[ADR-002](ADR-002-adopt-mit-license.md).
+
 <!-- adrctl-generated-footer -->
 
 ## Complete ADR Inventory
 
 - [ADR-000: Capability Scope, Epistemic Honesty, and Separation of Concerns](ADR-000-capability-scope-and-epistemic-honesty.md)
 - [ADR-001: Adopt Released Coding Standards](ADR-001-adopt-released-coding-standards.md)
+- [ADR-002: Adopt MIT License for Project-Owned Work](ADR-002-adopt-mit-license.md)
