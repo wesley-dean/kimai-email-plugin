@@ -13,6 +13,8 @@ on:
       - .github/workflows/release-staging.yml
       - scripts/verify-mailpit-message.bash
       - tests/Integration/Controller/InvoiceEmailerControllerTest.php
+      - tests/Staging/InvoiceEmailerStagingCommand.php
+      - doc/staging-validation.md
   workflow_dispatch:
     inputs:
       release_tag:
