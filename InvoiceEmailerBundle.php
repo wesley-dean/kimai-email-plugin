@@ -26,9 +26,8 @@ use Symfony\Component\HttpKernel\Bundle\Bundle;
  * The supported installation directory is part of the ADR-004 distribution
  * contract; generic GitHub source archives are not the supported plugin
  * package.
- *
- * @see \KimaiPlugin\InvoiceEmailerBundle\DependencyInjection\InvoiceEmailerExtension
  */
+
 class InvoiceEmailerBundle extends Bundle implements PluginInterface
 {
 }
