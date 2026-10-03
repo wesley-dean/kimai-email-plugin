@@ -186,7 +186,11 @@ final class InvoiceEmailerControllerTest extends AbstractControllerBaseTestCase
             $message->getTo()[0]->getAddress()
         );
         self::assertCount(1, $message->getAttachments());
-        self::assertCount(0, $message->getFrom());
+        self::assertCount(1, $message->getFrom());
+        self::assertSame(
+            'kimai@example.com',
+            $message->getFrom()[0]->getAddress()
+        );
     }
 
     /**
