@@ -68,7 +68,7 @@ See [release.md](release.md) and
 | PHP | 8.5 | CI-verified |
 | Symfony | Kimai-managed 2.67.0 dependency set | CI-verified through Kimai |
 | Mail dispatch | Kimai `EmailEvent` / `KimaiMailer` path | CI-verified |
-| SMTP transport to controlled sink | Pending staging workflow | Phase 7 |
+| SMTP transport to controlled sink | v0.2.0 staging-verified | Phase 7 |
 | External Internet delivery | Not claimed | Outside current validation |
 
 Kimai 2.67.0 was released on September 13, 2026 and declares PHP 8.2 through
@@ -229,9 +229,16 @@ Before claiming compatibility with a particular production deployment, record:
 
 Phase 7 adds a published-release staging workflow that downloads the actual
 GitHub Release assets, verifies their digests, installs the ZIP into Kimai
-2.67.0 on PHP 8.4, and exercises the manual send through a real SMTP connection
-to a controlled Mailpit sink.  See
-[staging-validation.md](staging-validation.md).
+2.67.0 on PHP 8.4, and exercises the maintained controller contract plus the
+packaged send service through a real SMTP connection to a controlled Mailpit
+sink.
+
+Release `v0.2.0` passed this staging gate in workflow run `37089873036`.
+The run validated the published ZIP digest
+`sha256:ed558a1a2809b22239bd7fbfd75c6e733daebce4a60461c57e8bea30a945178a`
+and verified the captured invoice attachment bytes.
+
+See [staging-validation.md](staging-validation.md).
 
 ## Extending the Compatibility Range
 
