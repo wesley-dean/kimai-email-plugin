@@ -78,7 +78,6 @@ final class InvoiceEmailerControllerTest extends AbstractControllerBaseTestCase
     public function testConfirmationGetHasNoEmailSideEffect(): void
     {
         $client = $this->getClientForAuthenticatedUser(User::ROLE_SUPER_ADMIN);
-        $client->disableReboot();
         $invoice = $this->createSendableInvoice();
 
         $events = [];
@@ -156,6 +155,7 @@ final class InvoiceEmailerControllerTest extends AbstractControllerBaseTestCase
     public function testConfirmedPostDispatchesExactlyOneEmailEvent(): void
     {
         $client = $this->getClientForAuthenticatedUser(User::ROLE_SUPER_ADMIN);
+        $client->disableReboot();
         $invoice = $this->createSendableInvoice();
 
         $events = [];
