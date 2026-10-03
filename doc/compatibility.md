@@ -18,9 +18,15 @@ squash-only merges, Conventional Commit PR titles become the commit subject on
 dependency-injection extension, and service-discovery configuration follow the
 current Kimai plugin structure.
 
-This establishes source-level packaging and loading intent only.  The skeleton
-has not yet been installed into a running Kimai instance, so plugin discovery,
-container compilation, and cache reload remain pending runtime evidence.
+Phase 3 adds the secured manual-send source path: permission registration,
+localized routes, invoice-row action integration, confirmation GET,
+CSRF-protected POST, current `InvoiceService` attachment lookup,
+`TemplatedEmail` construction, and dispatch through Kimai's `EmailEvent`.
+
+This remains source-level evidence only.  The plugin has not yet been installed
+into a running Kimai instance, so plugin discovery, container compilation,
+route loading, permission registration, template rendering, and end-to-end mail
+submission remain pending runtime evidence.
 
 ## Initial Target
 

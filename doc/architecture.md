@@ -61,8 +61,7 @@ flowchart TD
     K --> L["Kimai EmailSubscriber"]
     L --> M["KimaiMailer"]
     M --> N["Configured Symfony mail transport"]
-    N --> O["Record informational send/audit state"]
-    O --> P["Redirect with user-safe result"]
+    N --> O["Redirect with user-safe result"]
 ```
 
 ## Components
@@ -171,33 +170,32 @@ allow `KimaiMailer` to apply Kimai's configured fallback.
 
 ## Audit State
 
-The first release may retain an invoice metadata value such as
-`email_sent_date` as informational audit state.
+The Phase 3 implementation does not persist `email_sent_date` or equivalent
+post-send invoice metadata.
 
-That value is not proof that a recipient received the invoice and is not an
-exactly-once or idempotency guarantee.  Manual resend remains an explicit,
-human-confirmed operation.
+Manual resend remains an explicit, human-confirmed operation.  This avoids
+presenting a local timestamp as delivery evidence and removes a second
+post-send persistence side effect from the initial workflow.
 
-If the audit value becomes part of future duplicate-prevention or automatic
-behavior, its authority, editability, persistence semantics, and failure model
-must be reconsidered through a later architectural decision.
+If audit state is introduced later, its authority, editability, persistence
+semantics, privacy impact, and failure model must be reconsidered through a
+later architectural decision.
 
 ## Failure Model
 
-SMTP or another configured mail transport and Kimai's database do not
-participate in one atomic transaction.
+The Phase 3 manual-send path does not perform a post-send database write, so the
+initial workflow does not create a mail-versus-audit transaction boundary.
 
-A transport may accept a message and the subsequent audit-state persistence may
-still fail.  The plugin must surface that uncertainty and must not claim
-exactly-once delivery.
+The mail system itself can still accept, queue, delay, reject, or otherwise
+process a message after Kimai submits it.  The plugin therefore must not claim
+recipient delivery or exactly-once semantics.
 
-The initial manual workflow mitigates this with:
+The initial manual workflow mitigates uncertainty with:
 
 - explicit human confirmation;
 - no automatic retry;
-- no automatic sending;
-- clear operational logging without unnecessary recipient disclosure; and
-- visible audit state whose limitations are documented.
+- no automatic sending; and
+- clear operational logging without unnecessary recipient disclosure.
 
 A stronger delivery guarantee would require a different architecture, such as
 an outbox or durable queue with explicit idempotency semantics.

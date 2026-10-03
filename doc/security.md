@@ -34,10 +34,11 @@ The implementation is required to provide these properties:
    is documented and accepted.
 9. A successful mail API call is not represented as proof of recipient
    delivery.
-10. Audit metadata is not represented as an exactly-once guarantee.
+10. The Phase 3 implementation does not persist post-send audit metadata.
 
-These claims require implementation and tests before they can be considered
-supported by runtime evidence.
+The Phase 3 source implements these controls, but tests and runtime installation
+evidence are still required before they can be considered verified runtime
+properties.
 
 ## Actors and Identities
 
@@ -194,25 +195,27 @@ Threats:
 
 - an email side effect occurs without useful evidence of which authenticated
   user initiated it;
-- audit metadata is mistaken for delivery proof.
+- transport submission is mistaken for recipient delivery.
 
 Controls:
 
-- log or persist non-sensitive send-attempt context appropriate for operations;
-- retain an informational send timestamp;
-- distinguish transport acceptance from recipient delivery; and
-- avoid editable audit state when it becomes authoritative.
+- log non-sensitive send-attempt context using invoice and authenticated-user
+  identifiers;
+- do not persist a misleading `email_sent_date` field in the initial release;
+- distinguish mail-system submission from recipient delivery; and
+- keep recipient addresses and attachment paths out of routine logs.
 
 Evidence required:
 
-- tests for audit updates and failure behavior; and
-- documentation of exactly which fields/log events are retained.
+- tests for logging-adjacent observable behavior where practical; and
+- review of maintained logging statements.
 
 Residual risk:
 
-A timestamp alone does not prove message content, transport delivery, or
-recipient receipt.  Stronger non-repudiation would require additional logging,
-message identifiers, or provider evidence and is outside the first release.
+The initial release intentionally provides limited non-repudiation evidence.
+Stronger evidence would require additional logging, provider message IDs,
+delivery receipts, or another durable audit design and is outside the first
+release.
 
 ### Information Disclosure
 
@@ -301,10 +304,12 @@ model can affect the plugin.
 
 ## Cross-System Consistency
 
-The email system and Kimai database do not form one atomic transaction.
+The Phase 3 manual-send implementation performs no post-send database write.
+That removes the original email-versus-audit persistence ordering problem from
+the initial workflow.
 
-A transport may accept the email and a later audit-state write may fail.  The
-first release accepts this limitation rather than simulating exactly-once
+The mail boundary remains non-atomic from the user's perspective: a successful
+submission to Kimai's configured mail system still does not prove recipient
 delivery.
 
 Compensating controls are:
@@ -312,12 +317,11 @@ Compensating controls are:
 - human confirmation;
 - no automatic retries;
 - no automatic send trigger;
-- explicit resend behavior;
-- visible error handling; and
-- documentation that audit state is informational.
+- explicit resend behavior; and
+- visible user-safe failure handling.
 
-A requirement for stronger consistency is a review trigger for a queue/outbox
-architecture.
+A future requirement for durable audit state, retries, or stronger consistency
+is a review trigger for a queue/outbox architecture.
 
 ## Sensitive Logging
 
@@ -345,9 +349,8 @@ including:
 - malformed or missing recipient state is rejected;
 - missing invoice files are rejected;
 - customer-controlled text remains escaped;
-- mail failure does not record successful send state; and
-- database failure after transport acceptance is surfaced as a non-atomic
-  failure condition.
+- mail failure does not create a false success state; and
+- no post-send audit metadata is persisted by the Phase 3 implementation.
 
 Until those checks exist and pass, this document records intended controls
 rather than verified runtime properties.
