@@ -1,3 +1,6 @@
+parameters:
+  env(INVOICE_EMAILER_AUTO_SEND): '0'
+
 services:
   _defaults:
     autowire: true
@@ -14,3 +17,8 @@ services:
   KimaiPlugin\InvoiceEmailerBundle\Controller\:
     resource: '../../Controller/'
     tags: ['controller.service_arguments']
+
+
+  KimaiPlugin\InvoiceEmailerBundle\Service\AutomaticInvoiceEmailService:
+    arguments:
+      $enabled: '%env(bool:INVOICE_EMAILER_AUTO_SEND)%'

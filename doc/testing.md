@@ -117,6 +117,8 @@ The integration layer verifies:
 - the dispatched message uses the current customer recipient;
 - the generated invoice is attached; and
 - canceled invoices are rejected without dispatch.
+- the production dependency container resolves the automatic-send service with
+  a missing `INVOICE_EMAILER_AUTO_SEND` variable defaulting safely to disabled.
 
 ## Kimai 2.67.0 Test-Harness Shims
 
@@ -231,11 +233,15 @@ rendering, and dispatch behavior.
 
 Neither layer establishes:
 
+- automatic resend/idempotency behavior for ordinary invoice updates, because
+  that behavior is deliberately absent;
 - external SMTP delivery;
 - deliverability through spam or policy filters;
 - recipient mailbox receipt;
 - production-specific filesystem permissions; or
 - compatibility with untested Kimai versions.
 
-See [compatibility.md](compatibility.md) for the support claim and
-[security.md](security.md) for the threat model.
+See [compatibility.md](compatibility.md) for the support claim,
+[security.md](security.md) for the security posture, and
+[ADR-005](adr/ADR-005-opt-in-creation-time-automatic-invoice-email.md) for the
+automatic-send contract.

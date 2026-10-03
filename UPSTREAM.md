@@ -83,15 +83,21 @@ ADK base and therefore retain explicit ADK provenance in their source headers:
 
 - `Controller/InvoiceEmailerController.php`;
 - `Service/InvoiceEmailService.php`; and
-- `EventSubscriber/InvoiceActionsSubscriber.php`.
+- `EventSubscriber/InvoiceActionsSubscriber.php`;
+- `EventSubscriber/AutomaticInvoiceEmailSubscriber.php`; and
+- `Service/AutomaticInvoiceEmailService.php`.
 
 The implementation is rewritten around current Kimai APIs and ADR-003 rather
 than copied verbatim.  The root license and this document preserve the upstream
 MIT notice and selected base commit.
 
-The first maintained implementation will deliberately not import or preserve:
+The first maintained implementation deliberately did not import the historical
+automatic-send code.  ADR-005 later reintroduces the useful concept through a
+new creation-only implementation based on Kimai's current
+`InvoiceCreatedEvent`.
 
-- automatic sending triggered by invoice events;
+The maintained implementation still does not import or preserve:
+
 - the nonexistent `InvoiceStatusUpdateEvent` dependency;
 - automatic post-send invoice status changes;
 - the post-send `PAID` behavior;
@@ -115,3 +121,4 @@ record.
 
 - [ADR-002: Adopt MIT License for Project-Owned Work](doc/adr/ADR-002-adopt-mit-license.md)
 - [ADR-003: Establish a Secured Manual Invoice Email Workflow](doc/adr/ADR-003-secured-manual-invoice-email-workflow.md)
+- [ADR-005: Add Opt-In Creation-Time Automatic Invoice Email](doc/adr/ADR-005-opt-in-creation-time-automatic-invoice-email.md)

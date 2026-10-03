@@ -34,9 +34,10 @@ The first maintained implementation sends invoices only through an explicit
 human workflow: a side-effect-free confirmation GET followed by an authorized,
 CSRF-protected POST.  It uses current Kimai invoice and mail integration,
 requires normal access to the specific invoice in addition to the custom email
-permission, and performs no automatic invoice status transition.  Automation,
-retries, and stronger delivery/idempotency semantics remain separate future
-architecture work.  See
+permission, and performs no automatic invoice status transition.  Creation-time
+automation was deferred from this decision and is now governed separately by
+ADR-005; retries and stronger delivery/idempotency semantics remain separate
+future architecture work.  See
 [ADR-003](adr/ADR-003-secured-manual-invoice-email-workflow.md).
 
 ## Deterministic Release Artifacts
@@ -48,3 +49,13 @@ material, and ships with a SHA-256 sidecar.  CI installs and tests the packaged
 artifact, and the release tag is created only after main-branch compatibility
 validation and package verification succeed.  See
 [ADR-004](adr/ADR-004-deterministic-release-artifacts.md).
+
+## Opt-In Creation-Time Automatic Invoice Email
+
+Automatic invoice email is an explicitly enabled extension to the maintained
+manual workflow.  It observes only Kimai's creation-specific event, requires an
+authenticated user satisfying the same invoice/customer authorization
+boundaries, and delegates to the existing validated send service.  Failures are
+contained after persistence, with no automatic retry, status mutation, or audit
+flag; manual send remains the recovery path.  See
+[ADR-005](adr/ADR-005-opt-in-creation-time-automatic-invoice-email.md).

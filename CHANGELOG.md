@@ -5,6 +5,25 @@ All notable maintained changes to Kimai Invoice Emailer are recorded here.
 The repository uses Conventional Commit PR titles and squash-only merges.
 Release tags are created automatically from the commit type.
 
+## 0.3.0 - 2026-10-03
+
+### Added
+
+- Add opt-in automatic emailing for newly created invoices.
+- Trigger automation only from Kimai's `InvoiceCreatedEvent`.
+- Preserve `email_invoice`, specific-invoice `view_invoice`, and customer
+  authorization for the initiating authenticated user.
+- Add ADR-005 governing creation-time automation and failure containment.
+
+### Security
+
+- Keep automatic sending disabled by default.
+- Do not resend on ordinary invoice updates or status changes.
+- Do not add automatic retry, post-send audit metadata, or invoice-status
+  transitions.
+- Contain mail failures after invoice persistence and retain manual send as the
+  recovery path.
+
 ## 0.2.3 - 2026-10-03
 
 ### Documentation

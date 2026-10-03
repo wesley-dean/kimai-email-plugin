@@ -37,9 +37,10 @@ The first maintained release provides human-initiated invoice email only,
 through a side-effect-free confirmation GET and a CSRF-protected POST.  Sending
 requires the dedicated email permission plus normal authorization to view the
 specific invoice, uses `InvoiceService` and Kimai's `EmailEvent` mail path,
-and does not automatically alter invoice status.  Automatic sending, retries,
-and stronger idempotency are separate future decisions because they introduce
-additional state and failure-ordering concerns.  See
+and does not automatically alter invoice status.  Creation-time automation was
+deferred to ADR-005; retries and stronger idempotency remain separate future
+decisions because they introduce additional state and failure-ordering
+concerns.  See
 [ADR-003](ADR-003-secured-manual-invoice-email-workflow.md).
 
 ### ADR-004: Define Deterministic Kimai Release Artifacts
@@ -53,6 +54,15 @@ are created only after the validated main-branch commit has produced and
 verified its package.  See
 [ADR-004](ADR-004-deterministic-release-artifacts.md).
 
+### ADR-005: Add Opt-In Creation-Time Automatic Invoice Email
+
+Automatic sending is disabled by default and observes only
+`InvoiceCreatedEvent` when explicitly enabled.  It requires an authenticated
+authorized user, reuses the maintained send service, never changes invoice
+status, and contains failures after invoice persistence without automatic
+retry.  See
+[ADR-005](ADR-005-opt-in-creation-time-automatic-invoice-email.md).
+
 <!-- adrctl-generated-footer -->
 
 ## Complete ADR Inventory
@@ -62,3 +72,4 @@ verified its package.  See
 - [ADR-002: Adopt MIT License for Project-Owned Work](ADR-002-adopt-mit-license.md)
 - [ADR-003: Establish a Secured Manual Invoice Email Workflow](ADR-003-secured-manual-invoice-email-workflow.md)
 - [ADR-004: Define Deterministic Kimai Release Artifacts](ADR-004-deterministic-release-artifacts.md)
+- [ADR-005: Add Opt-In Creation-Time Automatic Invoice Email](ADR-005-opt-in-creation-time-automatic-invoice-email.md)
