@@ -130,7 +130,13 @@ tests establish otherwise.
 ## Verification Matrix
 
 The Phase 4 GitHub Actions workflow installs the plugin into the exact Kimai
-2.67.0 tag and exercises every PHP version declared compatible by that release:
+2.67.0 tag and exercises every PHP version declared compatible by that release.
+
+Kimai 2.67.0 contains a stale test-only service registration for
+`App\Importer\ImporterService`, although that class is absent from the tag.
+The integration harness removes that single dead test-service definition before
+running the plugin controller suite.  Production container linting uses the
+unmodified production service configuration.
 
 | Kimai | PHP 8.2 | PHP 8.3 | PHP 8.4 | PHP 8.5 |
 | --- | --- | --- | --- | --- |
