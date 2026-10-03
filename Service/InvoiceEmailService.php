@@ -83,13 +83,13 @@ final class InvoiceEmailService
      * persistent state is modified.  The returned object intentionally omits
      * filesystem paths and must not be treated as send-authoritative state.
      *
-     * @param Invoice $invoice Current Kimai invoice selected for manual sending;
-     *     the object is read but not mutated.
+     * @param Invoice $invoice Current Kimai invoice selected for manual
+     *     sending; the object is read but not mutated.
      * @return InvoiceEmailPreview Immutable presentation snapshot for human
      *     confirmation.
      * @throws InvoiceEmailException The invoice is canceled, lacks a usable
-     *     customer/recipient/file, contains an invalid recipient, or Kimai lacks
-     *     sender configuration.
+     *     customer, recipient, or file, contains an invalid recipient, or Kimai
+     *     lacks sender configuration.
      */
     public function preview(Invoice $invoice): InvoiceEmailPreview
     {
