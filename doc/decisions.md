@@ -48,3 +48,13 @@ material, and ships with a SHA-256 sidecar.  CI installs and tests the packaged
 artifact, and the release tag is created only after main-branch compatibility
 validation and package verification succeed.  See
 [ADR-004](adr/ADR-004-deterministic-release-artifacts.md).
+
+## Opt-In Creation-Time Automatic Invoice Email
+
+Automatic invoice email is an explicitly enabled extension to the maintained
+manual workflow.  It observes only Kimai's creation-specific event, requires an
+authenticated user satisfying the same invoice/customer authorization
+boundaries, and delegates to the existing validated send service.  Failures are
+contained after persistence, with no automatic retry, status mutation, or audit
+flag; manual send remains the recovery path.  See
+[ADR-005](adr/ADR-005-opt-in-creation-time-automatic-invoice-email.md).
