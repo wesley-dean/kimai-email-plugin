@@ -235,14 +235,11 @@ final class InvoiceEmailerControllerTest extends AbstractControllerBaseTestCase
         self::assertTrue($client->getResponse()->isSuccessful());
         self::assertCount(0, $events);
 
-        $entityManager = $this->getEntityManager();
-        $managedInvoice = $entityManager->find(Invoice::class, $invoice->getId());
-        self::assertInstanceOf(Invoice::class, $managedInvoice);
-
-        $customer = $managedInvoice->getCustomer();
+        $customer = $invoice->getCustomer();
         self::assertNotNull($customer);
-        $customer->setEmail('invoice-recipient@example.com');
-        $entityManager->flush();
+        $expectedRecipient = $customer->getEmail();
+        self::assertNotNull($expectedRecipient);
+        self::assertNotSame('', trim($expectedRecipient));
 
         $form = $crawler
             ->filter('form[action*="/invoice/emailer/send/"]')
@@ -259,7 +256,7 @@ final class InvoiceEmailerControllerTest extends AbstractControllerBaseTestCase
         );
         self::assertCount(1, $message->getTo());
         self::assertSame(
-            'invoice-recipient@example.com',
+            $expectedRecipient,
             $message->getTo()[0]->getAddress()
         );
         self::assertCount(1, $message->getAttachments());
