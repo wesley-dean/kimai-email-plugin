@@ -140,7 +140,7 @@ final class InvoiceEmailService
                 $preview->attachmentName
             );
 
-        $this->logger->debug('Submitting manual invoice email through Kimai', [
+        $this->logger->debug('Submitting invoice email through Kimai', [
             'invoice_id' => $invoice->getId(),
             'user_id' => $user?->getId(),
         ]);
