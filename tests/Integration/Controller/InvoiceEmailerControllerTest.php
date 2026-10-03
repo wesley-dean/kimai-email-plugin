@@ -70,6 +70,34 @@ final class InvoiceEmailerControllerTest extends AbstractControllerBaseTestCase
         );
     }
 
+
+    /**
+     * Verify email permission alone does not substitute for invoice visibility.
+     *
+     * @return void
+     */
+    public function testEmailPermissionWithoutInvoicePermissionCannotConfirm(): void
+    {
+        $this->grantPermissions(
+            User::ROLE_USER,
+            'TEST_EMAIL_INVOICE_ONLY',
+            ['email_invoice']
+        );
+
+        $client = $this->getClientForAuthenticatedUser(User::ROLE_USER);
+        $invoice = $this->createSendableInvoice();
+
+        $this->request(
+            $client,
+            '/invoice/emailer/confirm/' . $invoice->getId()
+        );
+
+        self::assertSame(
+            Response::HTTP_FORBIDDEN,
+            $client->getResponse()->getStatusCode()
+        );
+    }
+
     /**
      * Verify GET confirmation does not dispatch an email.
      *
@@ -97,6 +125,40 @@ final class InvoiceEmailerControllerTest extends AbstractControllerBaseTestCase
         self::assertCount(1, $form);
         self::assertSame('post', strtolower((string) $form->attr('method')));
         self::assertCount(1, $form->filter('input[name="_token"]'));
+    }
+
+
+    /**
+     * Verify customer-controlled confirmation text remains HTML-escaped.
+     *
+     * @return void
+     */
+    public function testConfirmationEscapesCustomerControlledText(): void
+    {
+        $client = $this->getClientForAuthenticatedUser(User::ROLE_SUPER_ADMIN);
+        $invoice = $this->createSendableInvoice();
+
+        $customer = $invoice->getCustomer();
+        self::assertNotNull($customer);
+        $customer->setCompany('<strong>Untrusted customer</strong>');
+        $this->getEntityManager()->flush();
+
+        $this->request(
+            $client,
+            '/invoice/emailer/confirm/' . $invoice->getId()
+        );
+
+        self::assertTrue($client->getResponse()->isSuccessful());
+        $content = (string) $client->getResponse()->getContent();
+
+        self::assertStringNotContainsString(
+            '<strong>Untrusted customer</strong>',
+            $content
+        );
+        self::assertStringContainsString(
+            '&lt;strong&gt;Untrusted customer&lt;/strong&gt;',
+            $content
+        );
     }
 
     /**
