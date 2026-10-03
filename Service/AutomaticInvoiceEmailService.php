@@ -141,7 +141,7 @@ final class AutomaticInvoiceEmailService
         } catch (InvoiceEmailException $exception) {
             $this->logger->warning('Automatic invoice email validation failed', [
                 'invoice_id' => $invoice->getId(),
-                'user_id' => $user?->getId(),
+                'user_id' => $user->getId(),
                 'reason' => $exception->getTranslationKey(),
             ]);
         } catch (\Throwable $exception) {
