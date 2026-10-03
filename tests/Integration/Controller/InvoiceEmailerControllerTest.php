@@ -68,9 +68,11 @@ final class InvoiceEmailerControllerTest extends AbstractControllerBaseTestCase
     }
 
     /**
-     * Verify the custom email permission is required in addition to invoice access.
+     * Verify the custom email permission is required in addition to invoice
+     * access.
      *
-     * An authenticated administrator with ordinary invoice access must receive HTTP 403 when the dedicated `email_invoice` capability is absent.
+     * An authenticated administrator with ordinary invoice access must receive
+     * HTTP 403 when the dedicated `email_invoice` capability is absent.
      *
      * @return void
      */
@@ -94,7 +96,8 @@ final class InvoiceEmailerControllerTest extends AbstractControllerBaseTestCase
     /**
      * Verify email permission alone does not substitute for invoice visibility.
      *
-     * A user granted only the custom email permission must still receive HTTP 403 because specific-invoice visibility remains independently required.
+     * A user granted only the custom email permission must still receive HTTP
+     * 403 because specific-invoice visibility remains independently required.
      *
      * @return void
      */
@@ -128,7 +131,8 @@ final class InvoiceEmailerControllerTest extends AbstractControllerBaseTestCase
     /**
      * Verify GET confirmation does not dispatch an email.
      *
-     * The observational confirmation request must render one POST form and leave the captured `EmailEvent` buffer empty.
+     * The observational confirmation request must render one POST form and
+     * leave the captured `EmailEvent` buffer empty.
      *
      * @return void
      */
@@ -160,7 +164,8 @@ final class InvoiceEmailerControllerTest extends AbstractControllerBaseTestCase
     /**
      * Verify customer-controlled confirmation text remains HTML-escaped.
      *
-     * The test persists HTML-like customer data and verifies Twig renders it as text rather than executable markup.
+     * The test persists HTML-like customer data and verifies Twig renders it
+     * as text rather than executable markup.
      *
      * @return void
      */
@@ -195,7 +200,8 @@ final class InvoiceEmailerControllerTest extends AbstractControllerBaseTestCase
     /**
      * Verify the send route cannot be invoked with GET.
      *
-     * Calling the side-effecting route with GET must fail at the HTTP routing boundary before mail dispatch can occur.
+     * Calling the side-effecting route with GET must fail at the HTTP routing
+     * boundary before mail dispatch can occur.
      *
      * @return void
      */
@@ -218,7 +224,8 @@ final class InvoiceEmailerControllerTest extends AbstractControllerBaseTestCase
     /**
      * Verify POST rejects an invalid CSRF token without dispatching email.
      *
-     * The request reaches the authenticated route but must fail with HTTP 403 before an `EmailEvent` is emitted.
+     * The request reaches the authenticated route but must fail with HTTP 403
+     * before an `EmailEvent` is emitted.
      *
      * @return void
      */
@@ -247,7 +254,9 @@ final class InvoiceEmailerControllerTest extends AbstractControllerBaseTestCase
     /**
      * Verify one valid confirmation POST dispatches exactly one invoice email.
      *
-     * The test follows the real confirmation form, submits its generated CSRF token, and inspects the single `EmailEvent` produced by Kimai's dispatcher.
+     * The test follows the real confirmation form, submits its generated CSRF
+     * token, and inspects the single `EmailEvent` produced by Kimai's
+     * dispatcher.
      *
      * @return void
      */
@@ -302,7 +311,8 @@ final class InvoiceEmailerControllerTest extends AbstractControllerBaseTestCase
     /**
      * Verify canceled invoices cannot reach the confirmation form.
      *
-     * A canceled invoice must redirect before rendering a send form or emitting an `EmailEvent`.
+     * A canceled invoice must redirect before rendering a send form or
+     * emitting an `EmailEvent`.
      *
      * @return void
      */
