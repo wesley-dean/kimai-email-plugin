@@ -3,9 +3,11 @@ name: Published release SMTP staging
 
 # yamllint disable-line rule:truthy
 on:
-  release:
+  workflow_run:
+    workflows:
+      - Kimai 2.67 compatibility
     types:
-      - published
+      - completed
   pull_request:
     branches:
       - main
@@ -32,6 +34,13 @@ concurrency:
 jobs:
   smtp-staging:
     name: Published ZIP through SMTP sink
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.head_branch == 'main'
+      )
     runs-on: ubuntu-24.04
 
     services:
@@ -56,14 +65,23 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           EVENT_NAME: ${{ github.event_name }}
-          RELEASE_EVENT_TAG: ${{ github.event.release.tag_name }}
+          VALIDATED_SHA: ${{ github.event.workflow_run.head_sha }}
           DISPATCH_TAG: ${{ inputs.release_tag }}
         run: |
           set -euo pipefail
 
           case "${EVENT_NAME}" in
-            release)
-              tag="${RELEASE_EVENT_TAG}"
+            workflow_run)
+              mapfile -t matching_tags < <(
+                gh api                   "repos/${GITHUB_REPOSITORY}/releases?per_page=100"                   --jq                   ".[] | select(.target_commitish == \"${VALIDATED_SHA}\") | .tag_name"
+              )
+
+              if (( ${#matching_tags[@]} != 1 )); then
+                printf                   'Expected exactly one release for validated commit %s; found %d.\n'                   "${VALIDATED_SHA}"                   "${#matching_tags[@]}" >&2
+                exit 1
+              fi
+
+              tag="${matching_tags[0]}"
               ;;
             workflow_dispatch)
               tag="${DISPATCH_TAG}"
@@ -101,8 +119,16 @@ jobs:
           path: harness
           persist-credentials: false
 
+      - name: Checkout validated staging harness
+        if: github.event_name == 'workflow_run'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          path: harness
+          persist-credentials: false
+
       - name: Checkout released staging harness
-        if: github.event_name != 'pull_request'
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v4
         with:
           ref: ${{ steps.release.outputs.tag }}
