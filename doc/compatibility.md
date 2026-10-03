@@ -7,6 +7,17 @@ maintained plugin.
 
 It is not a runtime compatibility certification.
 
+## Current Implementation Evidence
+
+The Phase 2 plugin skeleton targets Kimai 2.67.0 and declares plugin version
+`0.1.0` with `extra.kimai.require` set to `26700`.  The bundle entry point,
+dependency-injection extension, and service-discovery configuration follow the
+current Kimai plugin structure.
+
+This establishes source-level packaging and loading intent only.  The skeleton
+has not yet been installed into a running Kimai instance, so plugin discovery,
+container compilation, and cache reload remain pending runtime evidence.
+
 ## Initial Target
 
 The first maintained implementation targets:
