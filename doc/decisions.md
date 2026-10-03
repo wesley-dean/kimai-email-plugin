@@ -38,3 +38,13 @@ permission, and performs no automatic invoice status transition.  Automation,
 retries, and stronger delivery/idempotency semantics remain separate future
 architecture work.  See
 [ADR-003](adr/ADR-003-secured-manual-invoice-email-workflow.md).
+
+## Deterministic Release Artifacts
+
+Supported releases use a deterministic `InvoiceEmailerBundle-<version>.zip`
+whose internal root is already the final Kimai bundle directory.  The package
+excludes development-only repository content, includes legal and provenance
+material, and ships with a SHA-256 sidecar.  CI installs and tests the packaged
+artifact, and the release tag is created only after main-branch compatibility
+validation and package verification succeed.  See
+[ADR-004](adr/ADR-004-deterministic-release-artifacts.md).

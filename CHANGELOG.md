@@ -5,6 +5,25 @@ All notable maintained changes to Kimai Invoice Emailer are recorded here.
 The repository uses Conventional Commit PR titles and squash-only merges.
 Release tags are created automatically from the commit type.
 
+## 0.2.0 - 2026-10-03
+
+### Added
+
+- Add deterministic `InvoiceEmailerBundle-<version>.zip` release packaging.
+- Publish a SHA-256 sidecar for every supported release ZIP.
+- Add ADR-004 and maintained release-packaging documentation.
+- Install and test the generated ZIP in the Kimai 2.67 compatibility matrix.
+
+### Changed
+
+- Run the compatibility matrix on pushes to `main` as well as pull requests.
+- Create semantic-version tags and GitHub releases only after main-branch
+  compatibility validation succeeds.
+- Build release ZIPs with the final `InvoiceEmailerBundle/` directory already
+  inside the archive, eliminating the normal post-extraction rename.
+- Exclude tests, CI configuration, governance snapshots, and development
+  tooling from the runtime package.
+
 ## 0.1.2 - 2026-10-03
 
 ### Documentation

@@ -84,22 +84,36 @@ var/plugins/InvoiceEmailerBundle/
 
 The directory must contain `InvoiceEmailerBundle.php` at its root.
 
-Until Phase 6 introduces a deterministic release archive, install from a
-specific Git release tag rather than from a moving branch.  From the Kimai
-application directory:
+Download both release assets for the version you intend to install:
+
+```text
+InvoiceEmailerBundle-<version>.zip
+InvoiceEmailerBundle-<version>.zip.sha256
+```
+
+Verify the checksum before extraction.  For example, for `v0.2.0`:
 
 ```bash
-git clone \
-  --branch v0.1.1 \
-  --depth 1 \
-  https://github.com/wesley-dean/kimai-email-plugin.git \
-  var/plugins/InvoiceEmailerBundle
+VERSION=0.2.0
+sha256sum -c "InvoiceEmailerBundle-${VERSION}.zip.sha256"
+```
 
+For a fresh installation, extract the ZIP directly beneath Kimai's
+`var/plugins/` directory:
+
+```bash
+unzip -q "InvoiceEmailerBundle-${VERSION}.zip" -d /path/to/kimai/var/plugins
+cd /path/to/kimai
 bin/console kimai:reload --env=prod
 ```
 
-For a later release, replace `v0.1.1` with the release tag you intend to
-deploy.
+The release ZIP already contains the final `InvoiceEmailerBundle/` directory,
+so no post-extraction rename is required.
+
+For an upgrade, remove the existing
+`var/plugins/InvoiceEmailerBundle/` directory before extracting the new ZIP.
+This prevents files removed by a newer release from surviving an in-place
+overlay.
 
 Kimai's plugin documentation requires the exact bundle directory name and a
 cache rebuild after installation.  This plugin has no database-install command
@@ -107,6 +121,9 @@ and no asset-install step.
 
 Official Kimai plugin-management documentation:
 https://www.kimai.org/documentation/plugin-management.html
+
+See [Release Packaging](doc/release.md) for the artifact contract and local
+build instructions.
 
 ### Docker installations
 
@@ -204,10 +221,11 @@ The repository has two automated verification layers.
 The standalone layer runs Composer validation, PHPStan, and unit tests against
 Kimai 2.67.0 on PHP 8.2 through 8.5.
 
-The integration layer installs the plugin into the exact Kimai 2.67.0 source
-tree and exercises the real Kimai kernel, MySQL-backed fixtures, authorization,
-CSRF handling, plugin routes, templates, translations, and email-event
-dispatch.
+The integration layer builds the deterministic release ZIP, verifies a
+byte-identical rebuild, installs that packaged artifact into the exact Kimai
+2.67.0 source tree, and exercises the real Kimai kernel, MySQL-backed fixtures,
+authorization, CSRF handling, plugin routes, templates, translations, and
+email-event dispatch.
 
 Run the standalone checks with:
 
@@ -229,6 +247,7 @@ The maintained design is documented in:
 - [Security Model](doc/security.md)
 - [Compatibility](doc/compatibility.md)
 - [Testing](doc/testing.md)
+- [Release Packaging](doc/release.md)
 - [Upstream Provenance](UPSTREAM.md)
 
 Repository work is also governed by the released coding standards committed

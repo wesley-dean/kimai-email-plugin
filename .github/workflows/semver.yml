@@ -1,45 +1,88 @@
 ---
 # yamllint disable-line rule:truthy
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+  workflow_run:
+    workflows:
+      - Kimai 2.67 compatibility
+    types:
+      - completed
 
 name: Versioning
 permissions:
   contents: read
 
 concurrency:
-  group: "${{ github.ref }}-${{ github.workflow }}"
-  cancel-in-progress: true
+  group: "${{ github.event.workflow_run.head_sha }}-${{ github.workflow }}"
+  cancel-in-progress: false
 
 jobs:
   versioning:
-    runs-on: ubuntu-22.04
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
+
     steps:
-      - name: Checkout code
+      - name: Checkout validated commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v4
         with:
+          ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
           fetch-tags: true
 
-      - name: calculate version
+      - name: Calculate version
         id: calculate-version
         uses: bitshifted/git-auto-semver@c4e8f005e839f822325356f141939cf6c76b5701 # pin@v1
         with:
-          create_tag: true
+          create_tag: false
           initial_version: 0.0.1
           tag_prefix: v
 
-      - name: Generate release notes
-        id: release-notes
-        uses: RedCrafter07/release-notes-action@31674bfa3a219e7c661fc0c5b7b3851c741b9965 # pin@v1.0.1
-        with:
-          tag-name: "v${{ steps.calculate-version.outputs.version-string }}"
-          token: "${{ secrets.GITHUB_TOKEN }}"
+      - name: Verify package version
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          calculated="${{ steps.calculate-version.outputs.version-string }}"
+          declared="$(
+            php -r '
+              $data = json_decode(
+                  file_get_contents("composer.json"),
+                  true,
+                  512,
+                  JSON_THROW_ON_ERROR
+              );
+              echo $data["version"] ?? "";
+            '
+          )"
+
+          if [[ "${calculated}" != "${declared}" ]]; then
+            printf 'Calculated version %s does not match composer.json %s.\n'               "${calculated}" "${declared}" >&2
+            exit 1
+          fi
+
+      - name: Build release package
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version="${{ steps.calculate-version.outputs.version-string }}"
+          scripts/build-release.bash "${version}" dist
+
+      - name: Verify deterministic rebuild
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version="${{ steps.calculate-version.outputs.version-string }}"
+          scripts/build-release.bash "${version}" "${RUNNER_TEMP}/release-rebuild"
+
+          cmp             "dist/InvoiceEmailerBundle-${version}.zip"             "${RUNNER_TEMP}/release-rebuild/InvoiceEmailerBundle-${version}.zip"
+
+          cmp             "dist/InvoiceEmailerBundle-${version}.zip.sha256"             "${RUNNER_TEMP}/release-rebuild/InvoiceEmailerBundle-${version}.zip.sha256"
 
       - name: Create release
         id: create-release
@@ -47,7 +90,12 @@ jobs:
         with:
           token: "${{ secrets.GITHUB_TOKEN }}"
           name: "v${{ steps.calculate-version.outputs.version-string }}"
-          body: "${{ steps.release-notes.outputs.release-notes }}"
           tag_name: "v${{ steps.calculate-version.outputs.version-string }}"
+          target_commitish: ${{ github.event.workflow_run.head_sha }}
+          generate_release_notes: true
+          files: |
+            dist/InvoiceEmailerBundle-${{ steps.calculate-version.outputs.version-string }}.zip
+            dist/InvoiceEmailerBundle-${{ steps.calculate-version.outputs.version-string }}.zip.sha256
+          fail_on_unmatched_files: true
           draft: false
           prerelease: false

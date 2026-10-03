@@ -6,6 +6,9 @@ on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -92,6 +95,34 @@ jobs:
           coverage: none
           extensions: ctype, gd, iconv, intl, mbstring, mysql, xml, zip
 
+      - name: Build deterministic release package
+        working-directory: plugin
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version="$(
+            php -r '
+              $data = json_decode(
+                  file_get_contents("composer.json"),
+                  true,
+                  512,
+                  JSON_THROW_ON_ERROR
+              );
+              echo $data["version"] ?? "";
+            '
+          )"
+
+          ./scripts/build-release.bash             "${version}"             "${RUNNER_TEMP}/release-a"
+
+          ./scripts/build-release.bash             "${version}"             "${RUNNER_TEMP}/release-b"
+
+          cmp             "${RUNNER_TEMP}/release-a/InvoiceEmailerBundle-${version}.zip"             "${RUNNER_TEMP}/release-b/InvoiceEmailerBundle-${version}.zip"
+
+          cmp             "${RUNNER_TEMP}/release-a/InvoiceEmailerBundle-${version}.zip.sha256"             "${RUNNER_TEMP}/release-b/InvoiceEmailerBundle-${version}.zip.sha256"
+
+          printf 'PLUGIN_VERSION=%s\n' "${version}" >> "${GITHUB_ENV}"
+
       - name: Install Kimai dependencies
         working-directory: kimai
         run: composer install --no-interaction --no-progress
@@ -102,10 +133,24 @@ jobs:
           sed -i '/App\\Importer\\ImporterService:/,+2d' config/services_test.yaml
           sed -i "/^];$/i\\    KimaiPlugin\\\\InvoiceEmailerBundle\\\\InvoiceEmailerBundle::class => ['test' => true]," config/bundles.php
 
-      - name: Install plugin into Kimai
+      - name: Install packaged plugin into Kimai
+        shell: bash
         run: |
-          mkdir -p kimai/var/plugins/InvoiceEmailerBundle
-          rsync -a             --exclude='.git'             --exclude='vendor'             --exclude='megalinter-reports'             plugin/ kimai/var/plugins/InvoiceEmailerBundle/
+          set -euo pipefail
+
+          archive="${RUNNER_TEMP}/release-a/InvoiceEmailerBundle-${PLUGIN_VERSION}.zip"
+
+          mkdir -p kimai/var/plugins
+          unzip -q "${archive}" -d kimai/var/plugins
+
+          test -f kimai/var/plugins/InvoiceEmailerBundle/InvoiceEmailerBundle.php
+          test -f kimai/var/plugins/InvoiceEmailerBundle/LICENSE
+          test -f kimai/var/plugins/InvoiceEmailerBundle/UPSTREAM.md
+
+          test ! -e kimai/var/plugins/InvoiceEmailerBundle/tests
+          test ! -e kimai/var/plugins/InvoiceEmailerBundle/doc
+          test ! -e kimai/var/plugins/InvoiceEmailerBundle/.github
+          test ! -e kimai/var/plugins/InvoiceEmailerBundle/scripts
 
       - name: Reload Kimai with plugin
         working-directory: kimai
@@ -145,7 +190,7 @@ jobs:
         working-directory: kimai
         run: >-
           vendor/bin/phpunit
-          var/plugins/InvoiceEmailerBundle/tests/Integration
+          ../plugin/tests/Integration
         env:
           DATABASE_URL: >-
             mysql://root:kimai@127.0.0.1:${{ job.services.mysql.ports['3306'] }}/kimai?charset=utf8mb4&serverVersion=8.0.35
