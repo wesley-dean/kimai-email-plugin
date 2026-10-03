@@ -33,7 +33,11 @@ final class InvoiceEmailException extends \RuntimeException
     /** @var string Translation key for an invoice without a customer. */
     public const MISSING_CUSTOMER = 'invoice.emailer.error.missing_customer';
 
-    /** @var string Translation key for an unavailable generated invoice file. */
+    /**
+     * Translation key for an unavailable generated invoice file.
+     *
+     * @var string
+     */
     public const MISSING_FILE = 'invoice.emailer.error.missing_file';
 
     /** @var string Translation key for a customer without an email address. */
