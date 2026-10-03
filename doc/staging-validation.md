@@ -205,17 +205,17 @@ Those claims require their own evidence.
 
 ## Current Evidence
 
-Release `v0.2.0` is **staging-verified** against the maintained Phase 7
+Release `v0.2.1` is **staging-verified** against the maintained Phase 7
 scenario.
 
 Evidence:
 
-- published release: `v0.2.0`;
+- published release: `v0.2.1`;
 - release commit:
-  `5a79f1281145481991109d185df66ce7760f2e9c`;
+  `b0297584509f0413453371577884b2e42b31696e`;
 - published ZIP digest:
-  `sha256:ed558a1a2809b22239bd7fbfd75c6e733daebce4a60461c57e8bea30a945178a`;
-- staging workflow run: `37089873036`;
+  `sha256:5b5bd0604936490a80a5660059517224e60e3501e9232e0f28caece0f9d6b285`;
+- staging workflow run: `37090870420`;
 - Kimai: `2.67.0`;
 - PHP: `8.4`;
 - SMTP sink: Mailpit `v1.31.3`; and
@@ -223,6 +223,9 @@ Evidence:
   send contract passed, the packaged send service submitted through Kimai's
   prod mailer, Mailpit accepted exactly one message, and the captured attachment
   bytes matched the deterministic staging invoice.
+
+Release `v0.2.0` remains the first successful packaged staging baseline,
+recorded by run `37089873036`.
 
 This evidence does not establish Internet delivery or mailbox receipt.
 
