@@ -9,8 +9,11 @@ It is not a runtime compatibility certification.
 
 ## Current Implementation Evidence
 
-The Phase 2 plugin skeleton targets Kimai 2.67.0 and declares plugin version
-`0.1.0` with `extra.kimai.require` set to `26700`.  The bundle entry point,
+The Phase 2 plugin skeleton targets Kimai 2.67.0.  The repository's merge
+workflow initially tagged that merge as `v0.0.5`, so the package version is
+reconciled to the next patch release, `0.0.6`, while the versioning workflow is
+repaired to honor Conventional Commit lines within GitHub merge commits.
+`extra.kimai.require` remains `26700`.  The bundle entry point,
 dependency-injection extension, and service-discovery configuration follow the
 current Kimai plugin structure.
 

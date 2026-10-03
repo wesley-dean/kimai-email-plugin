@@ -26,6 +26,24 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
 
+      - name: Determine version bump
+        id: version-bump
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          message="$(git log -1 --pretty=%B)"
+
+          if grep -Eq '^(BREAKING CHANGE([[:space:]]*\(.+\))?[[:space:]]*:|[a-z]+(\(.+\))?!:)' <<<"${message}"; then
+            bump="major"
+          elif grep -Eq '^feat(\(.+\))?[[:space:]]*:' <<<"${message}"; then
+            bump="minor"
+          else
+            bump="patch"
+          fi
+
+          printf 'bump=%s\n' "${bump}" >> "${GITHUB_OUTPUT}"
+
       - name: calculate version
         id: calculate-version
         uses: bitshifted/git-auto-semver@c4e8f005e839f822325356f141939cf6c76b5701 # pin@v1
@@ -33,6 +51,7 @@ jobs:
           create_tag: true
           initial_version: 0.0.1
           tag_prefix: v
+          manual_bump: "${{ steps.version-bump.outputs.bump }}"
 
       - name: Generate release notes
         id: release-notes
