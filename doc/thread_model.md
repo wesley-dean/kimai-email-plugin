@@ -26,7 +26,8 @@ The threat model is constrained by:
 
 - [ADR-003](adr/ADR-003-secured-manual-invoice-email-workflow.md), which defines
   the secured human-confirmed send workflow; and
-- [ADR-004](adr/ADR-004-deterministic-release-artifacts.md), which defines the
+- [ADR-004](adr/ADR-004-deterministic-release-artifacts.md)
+- [ADR-005](adr/ADR-005-opt-in-creation-time-automatic-invoice-email.md), which defines the
   supported release artifact and publication boundary; and
 - [ADR-005](adr/ADR-005-opt-in-creation-time-automatic-invoice-email.md), which
   defines the creation-only automatic-send boundary.
@@ -869,7 +870,9 @@ The most material accepted residual risks are:
 
 - a valid stored customer address can still identify the wrong recipient;
 - an authorized user can repeatedly perform manual sends;
-- synchronous transport failure can delay a request;
+- automatic mode intentionally removes per-message human recipient review;
+- synchronous transport failure can delay a manual request or invoice-creation
+  request;
 - Kimai authentication, authorization, and invoice storage remain trusted
   dependencies;
 - transport acceptance is not Internet delivery or mailbox receipt;
@@ -877,8 +880,9 @@ The most material accepted residual risks are:
 - compromise of the application host, repository administration, or external
   platform can bypass controls owned by this plugin.
 
-These risks are accepted for the current human-initiated scope.  They should not
-be silently inherited by a future automatic-send design.
+These risks are accepted for the maintained manual and creation-time automatic
+scope.  They must be reconsidered before automation expands to updates, retries,
+background principals, or durable delivery state.
 
 ## Review Triggers
 
