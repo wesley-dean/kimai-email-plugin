@@ -1,3 +1,6 @@
+parameters:
+  env(INVOICE_EMAILER_AUTO_SEND): '0'
+
 services:
   _defaults:
     autowire: true
