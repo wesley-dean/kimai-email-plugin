@@ -14,8 +14,9 @@ The model is intended to answer four questions for each material threat:
 3. what control currently reduces that risk; and
 4. what residual risk remains after the control.
 
-This document describes the maintained manual-send architecture only.
-Automatic sending, retries, queues, bulk sending, arbitrary additional
+This document describes the maintained manual-send architecture and the
+ADR-005 opt-in creation-time automatic-send extension.  Automatic resend on
+ordinary updates, retries, queues, bulk sending, arbitrary additional
 recipients, authoritative delivery tracking, and invoice-status coupling remain
 outside the accepted architecture unless a later ADR introduces them.
 
@@ -26,7 +27,9 @@ The threat model is constrained by:
 - [ADR-003](adr/ADR-003-secured-manual-invoice-email-workflow.md), which defines
   the secured human-confirmed send workflow; and
 - [ADR-004](adr/ADR-004-deterministic-release-artifacts.md), which defines the
-  supported release artifact and publication boundary.
+  supported release artifact and publication boundary; and
+- [ADR-005](adr/ADR-005-opt-in-creation-time-automatic-invoice-email.md), which
+  defines the creation-only automatic-send boundary.
 
 Repository-wide security requirements are summarized in
 [security.md](security.md).
@@ -273,7 +276,28 @@ attacker-controlled email address.
 to the intended human.  Master-data correctness remains an administrative
 responsibility.
 
-#### S-4: Misconfigured sender or transport presents misleading identity
+#### S-4: Automatic event lacks an authenticated initiating identity
+
+**Scenario:** a background or system-created invoice reaches the creation event
+without a current authenticated Kimai user and would otherwise be emailed under
+an ambiguous authority.
+
+**Controls:**
+
+- automatic sending is disabled by default;
+- the automatic policy requires a current token whose user is a Kimai
+  `User`; and
+- no system-principal fallback is invented.
+
+**Evidence:**
+
+- automatic-send unit test for missing authenticated user; and
+- ADR-005.
+
+**Residual risk:** deployments that require background automatic sending cannot
+use this mode until a separately governed system-principal design exists.
+
+#### S-5: Misconfigured sender or transport presents misleading identity
 
 **Scenario:** deployment mail configuration uses an unintended sender or
 transport.
@@ -352,7 +376,25 @@ an arbitrary filesystem path.
 **Residual risk:** compromise of Kimai's invoice storage logic or host
 filesystem can undermine this boundary.
 
-#### T-4: Release artifact is modified between source validation and installation
+#### T-4: Invoice update is mistaken for a creation-time send trigger
+
+**Scenario:** editing an existing invoice or changing its status causes an
+unintended duplicate automatic email.
+
+**Controls:**
+
+- the automatic subscriber observes only `InvoiceCreatedEvent`; and
+- `InvoiceUpdatePostEvent` is deliberately excluded.
+
+**Evidence:**
+
+- subscriber unit test asserts the exact event map; and
+- ADR-005.
+
+**Residual risk:** another Kimai component could explicitly redispatch a
+creation event; durable exactly-once suppression is not claimed.
+
+#### T-5: Release artifact is modified between source validation and installation
 
 **Scenario:** the distributed ZIP differs from the source state that passed
 tests or is modified after publication.
@@ -375,7 +417,7 @@ tests or is modified after publication.
 independently compared integrity metadata is outside this repository's direct
 control.
 
-#### T-5: Release publication executes altered repository code with write privilege
+#### T-6: Release publication executes altered repository code with write privilege
 
 **Scenario:** untrusted or mutable source executes in a job holding
 `contents: write` and changes what is released.
@@ -437,7 +479,27 @@ recipient received or read the invoice.
 **Residual risk:** downstream systems can accept and later drop, quarantine, or
 redirect mail.
 
-#### R-3: Release provenance cannot be established
+#### R-3: Automatic attempt has no durable audit record
+
+**Scenario:** an operator cannot later prove whether an automatic attempt was
+made or whether it reached the transport.
+
+**Controls:**
+
+- non-sensitive operational logs record automatic submission, skip, validation,
+  and transport-failure outcomes; and
+- documentation explicitly avoids treating logs or transport acceptance as
+  delivery proof.
+
+**Evidence:**
+
+- automatic policy logging source; and
+- ADR-005.
+
+**Residual risk:** logs are not cryptographic non-repudiation evidence and may
+be rotated or unavailable.  Durable audit state remains intentionally absent.
+
+#### R-4: Release provenance cannot be established
 
 **Scenario:** an installed ZIP cannot be tied to a reviewed repository state.
 
@@ -531,7 +593,29 @@ script content.
 **Residual risk:** future template changes using raw output or unsafe filters
 would require threat-model review.
 
-#### I-5: Staging validation uses real customer data
+#### I-5: Automatic sending bypasses manual recipient review
+
+**Scenario:** a valid but incorrect stored customer address receives a
+confidential invoice without the manual confirmation page being shown.
+
+**Controls:**
+
+- automatic sending is explicit deployment opt-in;
+- it applies only to newly created invoices;
+- the recipient is resolved from current Kimai customer state by the shared
+  send service; and
+- malformed or missing recipient state blocks submission.
+
+**Evidence:**
+
+- shared service recipient-validation tests; and
+- ADR-005.
+
+**Residual risk:** automatic mode intentionally removes per-message human
+recipient review.  Administrators enabling it accept dependence on customer
+master-data correctness.
+
+#### I-6: Staging validation uses real customer data
 
 **Scenario:** production-like validation leaks real invoice or recipient data to
 a test SMTP system.
@@ -605,7 +689,27 @@ consume operator time.
 **Residual risk:** the plugin does not repair invoice generation or filesystem
 permissions.
 
-#### D-4: External CI dependency prevents release or staging validation
+#### D-4: Automatic mail failure blocks invoice creation
+
+**Scenario:** SMTP latency or failure propagates through the invoice-created
+event and makes a successfully persisted invoice appear to have failed.
+
+**Controls:**
+
+- automatic validation and transport exceptions are contained at the automatic
+  policy boundary;
+- the persisted invoice is left intact; and
+- no automatic retry loop is started.
+
+**Evidence:**
+
+- unit tests for validation and transport failure containment; and
+- ADR-005.
+
+**Residual risk:** the synchronous first attempt still consumes request time
+until the underlying mail operation fails or times out.
+
+#### D-5: External CI dependency prevents release or staging validation
 
 **Scenario:** GitHub, Kimai dependency installation, or Mailpit download is
 temporarily unavailable.
@@ -676,7 +780,27 @@ associated invoices.
 **Residual risk:** any weakness in Kimai's own object authorization affects the
 plugin.
 
-#### E-4: Release or staging workflow gains unnecessary mutation capability
+#### E-4: Automatic event bypasses manual authorization
+
+**Scenario:** creation-time automation is treated as system authority and sends
+an invoice that the initiating user could not send manually.
+
+**Controls:**
+
+- automatic policy requires `email_invoice`;
+- specific-invoice `view_invoice` remains required;
+- customer access remains an additional restriction; and
+- no send occurs without a current authenticated Kimai user.
+
+**Evidence:**
+
+- automatic policy authorization unit tests; and
+- ADR-005.
+
+**Residual risk:** over-broad permissions assigned by a Kimai administrator
+remain authoritative.
+
+#### E-5: Release or staging workflow gains unnecessary mutation capability
 
 **Scenario:** validation code can alter repository contents or release state.
 
@@ -759,7 +883,7 @@ be silently inherited by a future automatic-send design.
 
 Re-review this threat model when any of the following occurs:
 
-- automatic sending is introduced;
+- automatic sending expands beyond creation-only authenticated-user semantics;
 - retry, queue, or outbox behavior is introduced;
 - bulk sending is added;
 - additional recipients are added;
