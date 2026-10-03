@@ -68,7 +68,8 @@ final class InvoiceEmailServiceTest extends TestCase
     /**
      * Verify preview resolves only presentation-safe authoritative values.
      *
-     * The test confirms preview reads current invoice/file/sender state, emits no event, and exposes only display-safe attachment metadata.
+     * The test confirms preview reads current invoice, file, and sender state,
+     * emits no event, and exposes only display-safe attachment metadata.
      *
      * @return void
      */
@@ -106,7 +107,9 @@ final class InvoiceEmailServiceTest extends TestCase
     /**
      * Verify one successful send dispatches exactly one Kimai EmailEvent.
      *
-     * The captured event is inspected for recipient, subject, maintained templates, attachment count, and deliberate absence of an explicit From address before Kimai policy is applied.
+     * The captured event is inspected for recipient, subject, maintained
+     * templates, attachment count, and deliberate absence of an explicit From
+     * address before Kimai policy is applied.
      *
      * @return void
      */
@@ -164,7 +167,8 @@ final class InvoiceEmailServiceTest extends TestCase
     /**
      * Verify send re-resolves recipient state after an earlier preview.
      *
-     * Customer email is changed after preview; send must use the new current value rather than the stale confirmation snapshot.
+     * Customer email is changed after preview; send must use the new current
+     * value rather than the stale confirmation snapshot.
      *
      * @return void
      */
@@ -224,7 +228,8 @@ final class InvoiceEmailServiceTest extends TestCase
     /**
      * Verify canceled invoices are rejected before file or mail interaction.
      *
-     * Neither `InvoiceService::getInvoiceFile()` nor event dispatch may be reached after cancellation is detected.
+     * Neither `InvoiceService::getInvoiceFile()` nor event dispatch may be
+     * reached after cancellation is detected.
      *
      * @return void
      */
@@ -254,7 +259,8 @@ final class InvoiceEmailServiceTest extends TestCase
     /**
      * Verify invoices without customer email cannot be sent.
      *
-     * Missing recipient state must become the maintained user-actionable validation exception before file or mail work begins.
+     * Missing recipient state must become the maintained user-actionable
+     * validation exception before file or mail work begins.
      *
      * @return void
      */
@@ -278,7 +284,8 @@ final class InvoiceEmailServiceTest extends TestCase
     /**
      * Verify syntactically invalid customer email is rejected.
      *
-     * Symfony Mime address validation must be converted into the plugin's user-safe invalid-recipient exception.
+     * Symfony Mime address validation must be converted into the plugin's
+     * user-safe invalid-recipient exception.
      *
      * @return void
      */
@@ -302,7 +309,8 @@ final class InvoiceEmailServiceTest extends TestCase
     /**
      * Verify a missing generated invoice file prevents dispatch.
      *
-     * A null file resolution must fail before an `EmailEvent` is constructed or emitted.
+     * A null file resolution must fail before an `EmailEvent` is constructed
+     * or emitted.
      *
      * @return void
      */
@@ -335,7 +343,8 @@ final class InvoiceEmailServiceTest extends TestCase
     /**
      * Verify missing Kimai sender configuration is detected before dispatch.
      *
-     * An empty configured sender is treated as unsendable even though the message intentionally leaves its explicit From header unset for Kimai.
+     * An empty configured sender is treated as unsendable even though the
+     * message intentionally leaves its explicit From header unset for Kimai.
      *
      * @return void
      */
@@ -415,7 +424,8 @@ final class InvoiceEmailServiceTest extends TestCase
      * keys needed by these tests; all other keys are returned unchanged.  A
      * `NullLogger` prevents tests from writing operational logs.
      *
-     * @param InvoiceService $invoiceService Kimai invoice service or test double
+     * @param InvoiceService $invoiceService Kimai invoice service or test
+     *     double
      *     controlling generated-file resolution.
      * @param EventDispatcherInterface $dispatcher Event dispatcher or test
      *     double controlling observation of mail-event side effects.
