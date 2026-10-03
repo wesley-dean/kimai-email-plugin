@@ -123,15 +123,26 @@ runtime representation.
 The compatibility workflow SHALL run on pull requests and on pushes to
 `main`.
 
-The release workflow SHALL run only after the compatibility workflow succeeds
-for `main`.  It SHALL:
+For pushes to `main`, the compatibility workflow SHALL contain a read-only
+release-candidate job that depends directly on successful completion of both
+the unit and integration matrices.  That job SHALL:
 
-1. check out the exact validated `main` commit;
+1. check out the validated `main` commit with persisted credentials disabled;
 2. calculate the semantic version without creating a tag;
 3. require that the calculated version matches `composer.json`;
 4. build and verify the deterministic ZIP and checksum;
 5. rebuild the ZIP and confirm byte-for-byte identity; and
-6. create the GitHub release and tag only after those checks succeed.
+6. upload only the validated ZIP and SHA-256 sidecar as a short-lived workflow
+   artifact.
+
+A separate publish job SHALL depend directly on the release-candidate job and
+SHALL be the only job with `contents: write`.  The publish job SHALL NOT check
+out repository source or execute repository-controlled code.  It SHALL only:
+
+1. download the validated ZIP and checksum produced by the read-only job;
+2. verify the exact transferred file set;
+3. verify the SHA-256 checksum and ZIP integrity; and
+4. create the GitHub release and tag from those already-validated bytes.
 
 The GitHub release SHALL upload both the ZIP and its SHA-256 sidecar.
 
@@ -204,6 +215,8 @@ Rejected.
 - Every supported release asset has a SHA-256 checksum.
 - CI exercises the same representation users install.
 - A failed package build cannot create a release tag.
+- The write-capable publication boundary never checks out or executes
+  repository source.
 - Release contents and exclusions are inspectable in repository source.
 - License and upstream provenance travel with the distributed plugin.
 
@@ -242,7 +255,8 @@ A reviewer should be able to establish that:
 - the checksum verifies;
 - the packaged plugin passes the same Kimai integration contract as maintained
   source; and
-- the Git tag/release is created only after validation succeeds.
+- the Git tag/release is created only after validation succeeds; and
+- the privileged publish job handles only previously validated release bytes.
 
 ## Related Decisions
 
