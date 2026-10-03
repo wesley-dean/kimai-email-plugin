@@ -1,13 +1,15 @@
 # Kimai Invoice Emailer
 
-Kimai Invoice Emailer adds a secured, human-confirmed workflow for emailing an
-existing Kimai invoice to the email address stored on its customer.
+Kimai Invoice Emailer adds a secured manual workflow for emailing an existing
+Kimai invoice to the email address stored on its customer.  It also provides an
+optional creation-time automatic-send mode for authorized users.
 
-The maintained plugin is deliberately narrow.  It sends an invoice only after
-an authorized user opens a confirmation page and explicitly submits a
-CSRF-protected form.  It does not automatically send invoices, change invoice
-status, retry failed sends, or claim that mail accepted by the configured
-transport was delivered to the recipient.
+Manual sending remains human-confirmed through a CSRF-protected POST.
+Automatic sending is disabled by default, triggers only when a new invoice is
+created, and preserves the same invoice/customer authorization boundaries.
+Neither mode changes invoice status, retries failed sends automatically, or
+claims that mail accepted by the configured transport was delivered to the
+recipient.
 
 ## Status
 
@@ -33,7 +35,8 @@ evidence boundary.
 ## Features
 
 - Adds an "Email invoice" action to eligible invoice rows.
-- Requires an explicit confirmation GET before the send operation.
+- Supports optional creation-time automatic sending, disabled by default.
+- Requires an explicit confirmation GET before each manual send.
 - Performs the email side effect only through a CSRF-protected POST.
 - Requires the dedicated `email_invoice` permission.
 - Also requires normal `view_invoice` authorization for the specific invoice.
@@ -50,7 +53,7 @@ evidence boundary.
 
 The current maintained release does not provide:
 
-- automatic sending on invoice creation or update;
+- automatic sending on ordinary invoice updates or status changes;
 - automatic invoice status changes;
 - automatic retry;
 - bulk sending;
@@ -61,7 +64,8 @@ The current maintained release does not provide:
 
 Those omissions are architectural decisions, not unfinished switches hidden in
 configuration.  See
-[ADR-003](doc/adr/ADR-003-secured-manual-invoice-email-workflow.md).
+[ADR-003](doc/adr/ADR-003-secured-manual-invoice-email-workflow.md) and
+[ADR-005](doc/adr/ADR-005-opt-in-creation-time-automatic-invoice-email.md).
 
 ## Requirements
 
@@ -165,7 +169,19 @@ If the invoice action is not visible, verify all of the following:
 
 The plugin has no plugin-specific configuration file.
 
-It relies on existing Kimai state:
+Creation-time automatic sending is controlled by one environment variable:
+
+```text
+INVOICE_EMAILER_AUTO_SEND=1
+```
+
+The variable is optional and defaults to disabled.  When enabled, only
+`InvoiceCreatedEvent` is observed.  The current authenticated Kimai user must
+hold `email_invoice`, `view_invoice` for the created invoice, and applicable
+customer access.  Automatic failures are logged and leave the created invoice
+available for the normal manual-send recovery path.
+
+The plugin otherwise relies on existing Kimai state:
 
 - the customer's email address;
 - the generated invoice document;
@@ -177,6 +193,8 @@ A missing customer email, unreadable generated invoice, canceled invoice, or
 missing Kimai sender configuration prevents the send.
 
 ## Usage
+
+### Manual send
 
 1. Open Kimai's invoice list.
 2. Choose the "Email invoice" action for an eligible invoice.
@@ -191,6 +209,14 @@ invoice.
 The success message means the invoice email was submitted through Kimai's mail
 pipeline.  It does not mean the remote server accepted the message, the message
 reached the recipient's mailbox, or the recipient read it.
+
+### Automatic send
+
+When `INVOICE_EMAILER_AUTO_SEND=1`, creating a new invoice through an
+authenticated authorized Kimai user makes one best-effort submission attempt
+after Kimai has persisted the invoice and generated its file.  Ordinary invoice
+updates do not trigger automatic resend.  Failures do not roll back invoice
+creation and are recovered through the existing manual-send workflow.
 
 ## Email Content
 
@@ -212,7 +238,8 @@ The maintained workflow uses:
 - specific-invoice `view_invoice` authorization;
 - customer/object authorization;
 - a side-effect-free GET confirmation step;
-- a per-invoice CSRF-protected POST send step;
+- a per-invoice CSRF-protected POST step for manual sends;
+- an opt-in creation-only event boundary for automatic sends;
 - current authoritative recipient and file resolution at send time; and
 - Kimai's own mail integration rather than a parallel transport configuration.
 
