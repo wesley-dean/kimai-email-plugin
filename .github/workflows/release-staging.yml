@@ -1,0 +1,276 @@
+---
+name: Published release SMTP staging
+
+# yamllint disable-line rule:truthy
+on:
+  release:
+    types:
+      - published
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/release-staging.yml
+      - scripts/verify-mailpit-message.bash
+      - tests/Integration/Controller/InvoiceEmailerControllerTest.php
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Published release tag to validate; blank uses latest
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}"
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  smtp-staging:
+    name: Published ZIP through SMTP sink
+    runs-on: ubuntu-24.04
+
+    services:
+      mysql:
+        image: mysql@sha256:45abdd9b4144660b5c93a5b7d0ebb21e024f0ba9851ecb4ab43bf83c6bf83592
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: false
+          MYSQL_ROOT_PASSWORD: kimai
+          MYSQL_DATABASE: kimai
+        ports:
+          - 3306/tcp
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - name: Resolve published release
+        id: release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_EVENT_TAG: ${{ github.event.release.tag_name }}
+          DISPATCH_TAG: ${{ inputs.release_tag }}
+        run: |
+          set -euo pipefail
+
+          case "${EVENT_NAME}" in
+            release)
+              tag="${RELEASE_EVENT_TAG}"
+              ;;
+            workflow_dispatch)
+              tag="${DISPATCH_TAG}"
+              if [[ -z "${tag}" ]]; then
+                tag="$(
+                  gh api "repos/${GITHUB_REPOSITORY}/releases/latest"                     --jq '.tag_name'
+                )"
+              fi
+              ;;
+            pull_request)
+              tag="$(
+                gh api "repos/${GITHUB_REPOSITORY}/releases/latest"                   --jq '.tag_name'
+              )"
+              ;;
+            *)
+              printf 'Unsupported event: %s\n' "${EVENT_NAME}" >&2
+              exit 1
+              ;;
+          esac
+
+          if [[ ! "${tag}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            printf 'Invalid published release tag: %s\n' "${tag}" >&2
+            exit 1
+          fi
+
+          version="${tag#v}"
+          printf 'tag=%s\n' "${tag}" >> "${GITHUB_OUTPUT}"
+          printf 'version=%s\n' "${version}" >> "${GITHUB_OUTPUT}"
+
+      - name: Checkout staging harness
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: harness
+          persist-credentials: false
+
+      - name: Checkout released staging harness
+        if: github.event_name != 'pull_request'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v4
+        with:
+          ref: ${{ steps.release.outputs.tag }}
+          path: harness
+          persist-credentials: false
+
+      - name: Checkout Kimai 2.67.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v4
+        with:
+          repository: kimai/kimai
+          ref: 2.67.0
+          path: kimai
+          persist-credentials: false
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240
+        with:
+          php-version: '8.4'
+          coverage: none
+          extensions: ctype, gd, iconv, intl, mbstring, mysql, xml, zip
+
+      - name: Download published plugin assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          mkdir release
+
+          gh release download "${RELEASE_TAG}"             --repo "${GITHUB_REPOSITORY}"             --dir release             --pattern "InvoiceEmailerBundle-${RELEASE_VERSION}.zip"             --pattern "InvoiceEmailerBundle-${RELEASE_VERSION}.zip.sha256"
+
+      - name: Verify published plugin assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          archive="InvoiceEmailerBundle-${RELEASE_VERSION}.zip"
+          checksum="${archive}.sha256"
+
+          (
+            cd release
+            sha256sum -c "${checksum}"
+            unzip -tq "${archive}" >/dev/null
+          )
+
+          actual_digest="$(
+            sha256sum "release/${archive}" | awk '{print $1}'
+          )"
+          api_digest="$(
+            gh api               "repos/${GITHUB_REPOSITORY}/releases/tags/${RELEASE_TAG}"               --jq               ".assets[] | select(.name == \"${archive}\") | .digest"
+          )"
+          api_digest="${api_digest#sha256:}"
+
+          if [[ "${actual_digest}" != "${api_digest}" ]]; then
+            printf 'GitHub asset digest does not match downloaded ZIP.\n' >&2
+            exit 1
+          fi
+
+      - name: Install Kimai dependencies
+        working-directory: kimai
+        run: composer install --no-interaction --no-progress
+
+      - name: Prepare Kimai staging environment
+        working-directory: kimai
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          sed -i             '/App\\Importer\\ImporterService:/,+2d'             config/services_test.yaml
+
+          sed -i             "/^];$/i\\    KimaiPlugin\\\\InvoiceEmailerBundle\\\\InvoiceEmailerBundle::class => ['test' => true],"             config/bundles.php
+
+          sed -i             's#<env name="MAILER_URL" value="null://null"/>#<env name="MAILER_URL" value="smtp://127.0.0.1:1025"/>#'             phpunit.xml.dist
+
+          grep -Fq             'name="MAILER_URL" value="smtp://127.0.0.1:1025"'             phpunit.xml.dist
+
+      - name: Install published plugin
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p kimai/var/plugins
+          unzip -q             "release/InvoiceEmailerBundle-${RELEASE_VERSION}.zip"             -d kimai/var/plugins
+
+          test -f             kimai/var/plugins/InvoiceEmailerBundle/InvoiceEmailerBundle.php
+
+      - name: Verify production-like plugin loading
+        working-directory: kimai
+        run: |
+          bin/console kimai:reload --env=prod --no-interaction
+          bin/console lint:container --env=prod
+          bin/console debug:router invoice_emailer_confirm --env=prod
+          bin/console debug:router invoice_emailer_send --env=prod
+
+      - name: Install verified Mailpit
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          readonly mailpit_version='1.31.3'
+          readonly mailpit_sha256='e98b9a8d9622417a6988b736f7d3246e94bad4fed48ad3c604e60d72569f8cc7'
+
+          mkdir -p "${RUNNER_TEMP}/mailpit"
+          curl --fail --location --silent --show-error             "https://github.com/axllent/mailpit/releases/download/v${mailpit_version}/mailpit-linux-amd64.tar.gz"             --output "${RUNNER_TEMP}/mailpit/mailpit.tar.gz"
+
+          printf '%s  %s\n'             "${mailpit_sha256}"             "${RUNNER_TEMP}/mailpit/mailpit.tar.gz"             | sha256sum -c -
+
+          tar -xzf             "${RUNNER_TEMP}/mailpit/mailpit.tar.gz"             -C "${RUNNER_TEMP}/mailpit"
+
+          "${RUNNER_TEMP}/mailpit/mailpit"             --listen 127.0.0.1:8025             --smtp 127.0.0.1:1025             --database "${RUNNER_TEMP}/mailpit/mailpit.db"             --disable-version-check             --quiet             >"${RUNNER_TEMP}/mailpit/mailpit.log" 2>&1 &
+
+          printf '%s\n' "$!" >"${RUNNER_TEMP}/mailpit/mailpit.pid"
+
+          for _attempt in {1..30}; do
+            if curl --fail --silent               http://127.0.0.1:8025/api/v1/info >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+
+          cat "${RUNNER_TEMP}/mailpit/mailpit.log" >&2
+          exit 1
+
+      - name: Exercise manual send through SMTP
+        working-directory: kimai
+        env:
+          DATABASE_URL: >-
+            mysql://root:kimai@127.0.0.1:${{ job.services.mysql.ports['3306'] }}/kimai?charset=utf8mb4&serverVersion=8.0.35
+          APP_ENV: test
+          APP_DEBUG: '0'
+          MAILER_FROM: kimai@example.com
+        run: >-
+          vendor/bin/phpunit
+          ../harness/tests/Integration/Controller/InvoiceEmailerControllerTest.php
+          --filter
+          testConfirmedPostDispatchesExactlyOneEmailEvent
+
+      - name: Verify captured SMTP message
+        run: >-
+          harness/scripts/verify-mailpit-message.bash
+          http://127.0.0.1:8025
+
+      - name: Record staging evidence
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          {
+            printf '## Published release SMTP staging\n\n'
+            printf -- '- Release: `%s`\n' "${RELEASE_TAG}"
+            printf -- '- Kimai: `2.67.0`\n'
+            printf -- '- PHP: `8.4`\n'
+            printf -- '- SMTP sink: Mailpit `v1.31.3`\n'
+            printf -- '- Result: published ZIP crossed a real SMTP boundary '
+            printf 'with the expected invoice attachment.\n'
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Show Mailpit log on failure
+        if: failure()
+        shell: bash
+        run: |
+          if [[ -f "${RUNNER_TEMP}/mailpit/mailpit.log" ]]; then
+            cat "${RUNNER_TEMP}/mailpit/mailpit.log" >&2
+          fi

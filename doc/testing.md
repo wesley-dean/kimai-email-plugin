@@ -176,15 +176,39 @@ The controller integration suite additionally needs Kimai's test-kernel shims
 described above and a disposable MySQL database.  The GitHub Actions workflow is
 the maintained executable definition of that harness.
 
+## Published Release SMTP Staging Layer
+
+Phase 7 adds a separate read-only workflow for published releases.
+
+The staging workflow:
+
+1. resolves a published semantic-version tag;
+2. downloads the ZIP and SHA-256 sidecar from GitHub Releases;
+3. verifies the sidecar and GitHub's published asset digest;
+4. installs the downloaded ZIP into a clean Kimai 2.67.0 checkout;
+5. verifies production plugin loading and routes;
+6. downloads Mailpit v1.31.3 and verifies its published Linux amd64 SHA-256;
+7. changes only Kimai's disposable PHPUnit mail transport from `null://` to
+   local SMTP;
+8. executes the successful manual confirmation-to-POST controller path; and
+9. queries Mailpit's API to verify one captured message and the exact invoice
+   attachment bytes.
+
+The pull-request trigger exercises this harness against the latest already
+published release.  Published-release events validate the newly released
+artifact automatically.
+
+See [staging-validation.md](staging-validation.md).
+
 ## Mail Boundary
 
-The integration workflow uses a non-delivering mail transport.
+The normal compatibility matrix uses a non-delivering mail transport.
 
-This proves message construction and dispatch through Kimai's mail path.  It
-does not prove external SMTP acceptance, mailbox delivery, or recipient receipt.
-
-A later production-equivalent validation phase should exercise the packaged
-release with a controlled SMTP sink or controlled recipient.
+The Phase 7 staging layer crosses an actual SMTP protocol boundary to a local,
+controlled Mailpit sink.  This establishes SMTP acceptance by that sink for the
+tested packaged release.  It still does not establish Internet delivery,
+deliverability through filtering systems, recipient mailbox receipt, or
+recipient reading.
 
 ## Evidence Boundaries
 

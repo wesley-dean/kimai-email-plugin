@@ -158,6 +158,18 @@ content is never executed in the write-capable publication job.
 
 Both the ZIP and checksum are uploaded as release assets.
 
+## Post-Publication Staging
+
+A separate read-only staging workflow consumes the files from GitHub Releases
+after publication.  It verifies the published digest and checksum, installs the
+downloaded ZIP into Kimai 2.67.0, and exercises the manual-send path through a
+controlled SMTP sink.
+
+The staging workflow cannot create, edit, or delete releases.  Publication and
+post-publication validation remain separate trust boundaries.
+
+See [staging-validation.md](staging-validation.md).
+
 ## Source Archives
 
 GitHub also creates generic repository source archives for each tag.

@@ -4,8 +4,20 @@
 
 Kimai Invoice Emailer has a narrow, evidence-based compatibility claim.
 
-Release `v0.1.1` is **CI-verified** against the exact Kimai 2.67.0 source tag
-on PHP 8.2, 8.3, 8.4, and 8.5.
+Release `v0.2.0` is **CI-verified as the published package format** against
+the exact Kimai 2.67.0 source tag on PHP 8.2, 8.3, 8.4, and 8.5.
+
+The `v0.2.0` release tag points to commit
+`5a79f1281145481991109d185df66ce7760f2e9c`.  Main-branch compatibility run
+`37088809507` completed successfully across the full unit/static and packaged
+integration matrix before the isolated publisher created the release.
+
+The published ZIP asset is:
+
+```text
+InvoiceEmailerBundle-0.2.0.zip
+sha256:ed558a1a2809b22239bd7fbfd75c6e733daebce4a60461c57e8bea30a945178a
+```
 
 The final green compatibility run executed against PR-head commit
 `a20f7b7ac6df78261ef373bac9ba6791afa8ca28`.  That commit and the
@@ -38,9 +50,9 @@ only validated release bytes.  A separate write-capable publish job does not
 check out or execute repository source; it re-verifies those bytes before
 creating the semantic-version tag and GitHub release.
 
-The last already-published compatibility statement remains the historical
-`v0.1.1` evidence above until the first packaged release completes this gate.
-The expected first release under ADR-004 is `v0.2.0`.
+Release `v0.2.0` completed this gate successfully.  Its GitHub release
+contains both the deterministic ZIP and SHA-256 sidecar produced by the
+validated main-branch workflow.
 
 See [release.md](release.md) and
 [ADR-004](adr/ADR-004-deterministic-release-artifacts.md).
@@ -56,7 +68,8 @@ See [release.md](release.md) and
 | PHP | 8.5 | CI-verified |
 | Symfony | Kimai-managed 2.67.0 dependency set | CI-verified through Kimai |
 | Mail dispatch | Kimai `EmailEvent` / `KimaiMailer` path | CI-verified |
-| External SMTP delivery | Not yet verified | Phase 7 validation |
+| SMTP transport to controlled sink | Pending staging workflow | Phase 7 |
+| External Internet delivery | Not claimed | Outside current validation |
 
 Kimai 2.67.0 was released on September 13, 2026 and declares PHP 8.2 through
 8.5 compatibility.
@@ -214,7 +227,11 @@ Before claiming compatibility with a particular production deployment, record:
 - relevant mail transport type; and
 - staging-validation results.
 
-Phase 7 is reserved for production-equivalent deployment validation.
+Phase 7 adds a published-release staging workflow that downloads the actual
+GitHub Release assets, verifies their digests, installs the ZIP into Kimai
+2.67.0 on PHP 8.4, and exercises the manual send through a real SMTP connection
+to a controlled Mailpit sink.  See
+[staging-validation.md](staging-validation.md).
 
 ## Extending the Compatibility Range
 
@@ -234,6 +251,7 @@ When adding a version:
 - [Security](security.md)
 - [Testing](testing.md)
 - [Release Packaging](release.md)
+- [Staging Validation](staging-validation.md)
 - [Upstream Provenance](../UPSTREAM.md)
 - [ADR-003](adr/ADR-003-secured-manual-invoice-email-workflow.md)
 - [ADR-004](adr/ADR-004-deterministic-release-artifacts.md)
