@@ -5,6 +5,19 @@ All notable maintained changes to Kimai Invoice Emailer are recorded here.
 The repository uses Conventional Commit PR titles and squash-only merges.
 Release tags are created automatically from the commit type.
 
+## 0.2.1 - 2026-10-03
+
+### Testing
+
+- Add read-only post-publication staging validation for GitHub Release assets.
+- Verify the downloaded ZIP against both its SHA-256 sidecar and GitHub's asset
+  digest before installation.
+- Exercise the packaged manual-send workflow through a real SMTP connection to
+  a pinned, checksum-verified Mailpit binary.
+- Verify the captured message and invoice attachment through Mailpit's API.
+- Promote the published `v0.2.0` package to the documented CI-verified
+  distribution baseline.
+
 ## 0.2.0 - 2026-10-03
 
 ### Added

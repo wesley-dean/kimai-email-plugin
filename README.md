@@ -13,14 +13,18 @@ transport was delivered to the recipient.
 
 The current maintained line targets Kimai 2.67.0.
 
-Kimai 2.67.0 with PHP 8.2, 8.3, 8.4, and 8.5 is CI-verified by installing the
-plugin into the exact Kimai 2.67.0 source tree and exercising plugin discovery,
-container compilation, routes, templates, translations, authorization, CSRF
-handling, invoice-file lookup, and email-event dispatch.
+Release `v0.2.0` is CI-verified as the published package format against Kimai
+2.67.0 with PHP 8.2, 8.3, 8.4, and 8.5.  The post-merge release gate built the
+deterministic ZIP, installed that packaged representation into Kimai, exercised
+plugin discovery, container compilation, routes, templates, translations,
+authorization, CSRF handling, invoice-file lookup, and email-event dispatch,
+then published those validated bytes.
 
-The automated mail transport is intentionally non-delivering.  Production-like
-SMTP delivery remains a later validation phase, so CI success must not be read
-as proof of external mail delivery or recipient receipt.
+The normal compatibility matrix intentionally uses a non-delivering mail
+transport.  Release `v0.2.0` has additionally passed published-artifact staging
+validation through a real SMTP connection to a controlled Mailpit sink.  This
+establishes SMTP acceptance by that sink, not Internet delivery, mailbox
+receipt, or recipient reading.
 
 See [Compatibility](doc/compatibility.md) and [Testing](doc/testing.md) for the
 evidence boundary.
@@ -248,6 +252,7 @@ The maintained design is documented in:
 - [Compatibility](doc/compatibility.md)
 - [Testing](doc/testing.md)
 - [Release Packaging](doc/release.md)
+- [Staging Validation](doc/staging-validation.md)
 - [Upstream Provenance](UPSTREAM.md)
 
 Repository work is also governed by the released coding standards committed

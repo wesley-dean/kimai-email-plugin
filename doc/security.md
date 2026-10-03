@@ -15,9 +15,11 @@ The source controls described here are implemented, and Phase 4 added automated
 unit and real-Kimai integration evidence for the principal authorization, CSRF,
 rendering, validation, and dispatch boundaries.
 
-The evidence remains bounded.  The automated mail transport is non-delivering,
-so external SMTP acceptance, mailbox delivery, and recipient receipt are not
-yet validated.
+The evidence remains bounded.  The normal compatibility matrix uses a
+non-delivering transport, while Phase 7 verified release `v0.2.0` through a
+real SMTP connection to a controlled Mailpit sink.  That establishes SMTP
+acceptance by the controlled sink only; Internet delivery, mailbox receipt, and
+recipient reading remain unvalidated.
 
 ## Security Claims
 
@@ -357,7 +359,9 @@ Phase 4 provides tests and review evidence for:
 - no post-send audit metadata is persisted by the Phase 3 implementation.
 
 Phase 4 adds automated unit and Kimai-kernel integration tests for these
-controls.  This document may describe a control as verified only after the
+controls.  Phase 7 adds published-artifact SMTP staging evidence for
+`v0.2.0`, including exact attachment-byte verification at the controlled
+Mailpit sink.  This document may describe a control as verified only after the
 corresponding workflow jobs pass for the evaluated commit or release.
 
 See [testing.md](testing.md) for the executable evidence map.
