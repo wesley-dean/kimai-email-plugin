@@ -21,7 +21,7 @@ authorization, CSRF handling, invoice-file lookup, and email-event dispatch,
 then published those validated bytes.
 
 The normal compatibility matrix intentionally uses a non-delivering mail
-transport.  Release `v0.2.0` has passed published-artifact staging validation through a
+transport.  Release `v0.2.1` has passed published-artifact staging validation through a
 real SMTP connection to a controlled Mailpit sink.  This
 establishes SMTP acceptance by that sink, not Internet delivery, mailbox
 receipt, or recipient reading.
