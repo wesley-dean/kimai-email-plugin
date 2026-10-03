@@ -257,6 +257,8 @@ jobs:
       - name: Exercise packaged service through production SMTP
         working-directory: kimai
         env:
+          DATABASE_URL: >-
+            mysql://root:kimai@127.0.0.1:${{ job.services.mysql.ports['3306'] }}/kimai?charset=utf8mb4&serverVersion=8.0.35
           APP_ENV: prod
           APP_DEBUG: '0'
           MAILER_URL: smtp://127.0.0.1:1025
