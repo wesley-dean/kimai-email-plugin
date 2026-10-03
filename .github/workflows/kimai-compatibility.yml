@@ -96,10 +96,11 @@ jobs:
         working-directory: kimai
         run: composer install --no-interaction --no-progress
 
-      - name: Remove stale Kimai 2.67 test service
+      - name: Prepare Kimai 2.67 test environment
         working-directory: kimai
         run: |
           sed -i '/App\\Importer\\ImporterService:/,+2d' config/services_test.yaml
+          sed -i "/^];$/i\\    KimaiPlugin\\\\InvoiceEmailerBundle\\\\InvoiceEmailerBundle::class => ['test' => true]," config/bundles.php
 
       - name: Install plugin into Kimai
         run: |
@@ -137,8 +138,8 @@ jobs:
       - name: Verify plugin routes
         working-directory: kimai
         run: |
-          bin/console debug:router invoice_emailer_confirm --env=test
-          bin/console debug:router invoice_emailer_send --env=test
+          bin/console debug:router invoice_emailer_confirm --env=prod
+          bin/console debug:router invoice_emailer_send --env=prod
 
       - name: Run plugin integration tests
         working-directory: kimai
