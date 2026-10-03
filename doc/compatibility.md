@@ -127,22 +127,30 @@ compatibility merely because upstream metadata did.
 The initial maintained compatibility floor is therefore Kimai 2.67.0 until
 tests establish otherwise.
 
-## Intended Verification Matrix
+## Verification Matrix
 
-The first release should exercise the plugin against Kimai 2.67.0 with each PHP
-version that the Kimai release supports and that can be reproduced reliably in
-CI or a controlled test environment:
+The Phase 4 GitHub Actions workflow installs the plugin into the exact Kimai
+2.67.0 tag and exercises every PHP version declared compatible by that release.
+
+Kimai 2.67.0 contains a stale test-only service registration for
+`App\Importer\ImporterService`, although that class is absent from the tag.
+The integration harness removes that single dead test-service definition before
+running the plugin controller suite.  Production container linting uses the
+unmodified production service configuration.
 
 | Kimai | PHP 8.2 | PHP 8.3 | PHP 8.4 | PHP 8.5 |
 | --- | --- | --- | --- | --- |
-| 2.67.0 | planned | planned | planned | planned |
+| 2.67.0 | CI | CI | CI | CI |
 
-A matrix cell becomes "verified" only after the plugin is installed into a
-matching Kimai environment and the relevant checks pass.
+A matrix cell becomes "verified" only after the corresponding workflow job
+completes successfully for the commit or release being evaluated.  The workflow
+and test inventory are documented in [testing.md](testing.md).
 
 ## Required Compatibility Checks
 
-At minimum, a target combination should demonstrate:
+The Phase 4 workflow now executes the following checks.  Their documented
+status must still reflect actual workflow results rather than configuration
+alone:
 
 - plugin discovery and container compilation;
 - `bin/console kimai:reload --env=prod`;

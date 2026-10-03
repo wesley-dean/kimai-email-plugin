@@ -3,7 +3,7 @@
     "description": "Send existing Kimai invoices to customers through a secured manual email workflow",
     "homepage": "https://github.com/wesley-dean/kimai-email-plugin",
     "type": "kimai-plugin",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "license": "MIT",
     "authors": [
         {
@@ -43,5 +43,22 @@
             "*": "dist"
         },
         "sort-packages": true
+    },
+    "autoload-dev": {
+        "KimaiPlugin\\InvoiceEmailerBundle\\Tests\\": "tests/"
+    },
+    "require-dev": {
+        "kimai/kimai": "2.67.0",
+        "phpstan/phpstan": "^2.0",
+        "phpunit/phpunit": "^10.5"
+    },
+    "scripts": {
+        "test-unit": "vendor/bin/phpunit --configuration phpunit.xml.dist",
+        "phpstan": "vendor/bin/phpstan analyse --configuration phpstan.neon",
+        "quality": [
+            "composer validate --strict --no-check-version",
+            "@phpstan",
+            "@test-unit"
+        ]
     }
 }

@@ -1,0 +1,15 @@
+parameters:
+  level: 9
+  paths:
+    - Controller
+    - DependencyInjection
+    - EventSubscriber
+    - Exception
+    - Model
+    - Service
+    - InvoiceEmailerBundle.php
+    - tests/Unit
+  excludePaths:
+    - vendor
+  treatPhpDocTypesAsCertain: false
+  inferPrivatePropertyTypeFromConstructor: true
