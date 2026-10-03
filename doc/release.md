@@ -136,14 +136,25 @@ The integration matrix:
 The integration tests remain outside the release ZIP and execute against the
 installed packaged plugin.
 
-## Release Ordering
+## Release Ordering and Privilege Boundary
 
-The release workflow is downstream of successful compatibility validation on
-`main`.
+For pushes to `main`, the compatibility workflow first completes the full
+unit and Kimai integration matrices.
 
-It calculates the next semantic version without creating a tag, verifies that
-the result matches `composer.json`, builds and re-verifies the package, and
-only then creates the Git tag and GitHub release.
+A read-only `release-candidate` job depends directly on those successful
+matrices.  It checks out the validated commit without persisted credentials,
+calculates the next semantic version without creating a tag, verifies that the
+version matches `composer.json`, builds the ZIP twice, confirms byte-for-byte
+identity, and uploads only the validated ZIP and checksum as a short-lived
+workflow artifact.
+
+A separate `publish` job has `contents: write`.  It does not check out
+repository source and does not execute repository-controlled code.  It only
+downloads the validated release files, verifies the exact file set, checksum,
+and ZIP integrity, then creates the Git tag and GitHub release.
+
+This preserves a narrow privilege boundary: untrusted or mutable repository
+content is never executed in the write-capable publication job.
 
 Both the ZIP and checksum are uploaded as release assets.
 
