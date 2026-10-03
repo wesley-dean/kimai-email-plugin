@@ -223,7 +223,7 @@ an outbox or durable queue with explicit idempotency semantics.
 
 ## Architectural Invariants
 
-The first maintained release must preserve these invariants:
+The maintained release line must preserve these invariants:
 
 1. GET does not send email.
 2. Email submission occurs only through POST.
