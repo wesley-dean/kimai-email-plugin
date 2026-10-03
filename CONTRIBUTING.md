@@ -6,22 +6,23 @@ or pull request anyway. The worst that can happen is you'll be
 politely asked to change something. I love all friendly contributions!
 
 I encourage you to read this project's CONTRIBUTING policy
-(you are here), its [LICENSE](LICENSE.md), and its [README](/README.md).
+(you are here), its [LICENSE](LICENSE), and its [README](/README.md).
 
 ## Policies
 
 To ensure a welcoming environment for all of our project, I request that
 all contributors should adhere to the [code of conduct](CODE_OF_CONDUCT.md).
 
-## Public domain
+## License
 
-This project is in the public domain within the United States, and copyright
-and related rights in the work worldwide are waived through the
-[CC0 1.0 Universal public domain dedication](https://creativecommons.org/publicdomain/zero/1.0/).
+Project-owned work in this repository is distributed under the MIT License.
+Unless explicitly identified and accepted as third-party material under another
+compatible license, contributions are submitted for distribution under the same
+MIT terms.
 
-All contributions to this project will be released under the CC0 dedication.
-By submitting a pull request or issue, you are agreeing to comply with
-this waiver of copyright interest.
+Contributors must preserve copyright, attribution, and license notices for
+third-party material.  Importing external code does not transfer its copyright
+to this project or erase obligations imposed by its original license.
 
 ## Coding standards
 

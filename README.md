@@ -85,8 +85,9 @@ exceptions belong in repository governance.
 
 ## License
 
-This project is licensed under the Creative Commons License 1.0 Universal
-License - see the [LICENSE](LICENSE) file for details.
+Project-owned work is licensed under the MIT License.  Third-party material,
+when present, retains its original copyright and license notices.  See the
+[LICENSE](LICENSE) file and repository provenance documentation for details.
 
 ## Contributing
 

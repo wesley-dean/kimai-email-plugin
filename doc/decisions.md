@@ -17,3 +17,13 @@ requirements; accepted repository-specific ADRs and explicit local policy may
 refine them.  Local exceptions belong in repository governance rather than
 edits to the managed snapshot.  See
 [ADR-001](adr/ADR-001-adopt-released-coding-standards.md).
+
+## MIT Licensing and Third-Party Provenance
+
+New project-owned work is distributed under the MIT License, while permissions
+already granted for previously distributed CC0 material remain intact.
+Third-party material must retain its original copyright, attribution, and
+license notices.  The planned ADK plugin import must record its upstream source
+and preserve the upstream MIT notice rather than presenting imported code as
+solely project-owned.  See
+[ADR-002](adr/ADR-002-adopt-mit-license.md).
