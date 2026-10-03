@@ -180,10 +180,6 @@ jobs:
 
           sed -i             "/^];$/i\\    KimaiPlugin\\\\InvoiceEmailerBundle\\\\InvoiceEmailerBundle::class => ['test' => true],"             config/bundles.php
 
-          sed -i             's#<env name="MAILER_URL" value="null://null"/>#<env name="MAILER_URL" value="smtp://127.0.0.1:1025"/>#'             phpunit.xml.dist
-
-          grep -Fq             'name="MAILER_URL" value="smtp://127.0.0.1:1025"'             phpunit.xml.dist
-
       - name: Install published plugin
         shell: bash
         env:
@@ -233,7 +229,7 @@ jobs:
           cat "${RUNNER_TEMP}/mailpit/mailpit.log" >&2
           exit 1
 
-      - name: Exercise manual send through SMTP
+      - name: Verify controller manual-send contract
         working-directory: kimai
         env:
           DATABASE_URL: >-
@@ -246,6 +242,28 @@ jobs:
           ../harness/tests/Integration/Controller/InvoiceEmailerControllerTest.php
           --filter
           testConfirmedPostDispatchesExactlyOneEmailEvent
+
+      - name: Register staging-only production command
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cp \
+            harness/tests/Staging/InvoiceEmailerStagingCommand.php \
+            kimai/src/Command/InvoiceEmailerStagingCommand.php
+
+      - name: Exercise packaged service through production SMTP
+        working-directory: kimai
+        env:
+          APP_ENV: prod
+          APP_DEBUG: '0'
+          MAILER_URL: smtp://127.0.0.1:1025
+          MAILER_FROM: kimai@example.com
+        run: |
+          set -euo pipefail
+
+          bin/console cache:clear --env=prod --no-interaction
+          bin/console app:invoice-emailer:staging-send --env=prod
 
       - name: Verify captured SMTP message
         run: >-
