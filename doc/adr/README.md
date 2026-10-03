@@ -37,9 +37,10 @@ The first maintained release provides human-initiated invoice email only,
 through a side-effect-free confirmation GET and a CSRF-protected POST.  Sending
 requires the dedicated email permission plus normal authorization to view the
 specific invoice, uses `InvoiceService` and Kimai's `EmailEvent` mail path,
-and does not automatically alter invoice status.  Automatic sending, retries,
-and stronger idempotency are separate future decisions because they introduce
-additional state and failure-ordering concerns.  See
+and does not automatically alter invoice status.  Creation-time automation was
+deferred to ADR-005; retries and stronger idempotency remain separate future
+decisions because they introduce additional state and failure-ordering
+concerns.  See
 [ADR-003](ADR-003-secured-manual-invoice-email-workflow.md).
 
 ### ADR-004: Define Deterministic Kimai Release Artifacts
