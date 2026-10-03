@@ -196,9 +196,26 @@ Those claims require their own evidence.
 
 ## Current Evidence
 
-Release `v0.2.0` is already CI-verified as the first packaged release.
-Published-release SMTP staging evidence will be recorded here after the Phase 7
-workflow completes successfully.
+Release `v0.2.0` is **staging-verified** against the maintained Phase 7
+scenario.
+
+Evidence:
+
+- published release: `v0.2.0`;
+- release commit:
+  `5a79f1281145481991109d185df66ce7760f2e9c`;
+- published ZIP digest:
+  `sha256:ed558a1a2809b22239bd7fbfd75c6e733daebce4a60461c57e8bea30a945178a`;
+- staging workflow run: `37089873036`;
+- Kimai: `2.67.0`;
+- PHP: `8.4`;
+- SMTP sink: Mailpit `v1.31.3`; and
+- result: the published ZIP installed successfully, the maintained controller
+  send contract passed, the packaged send service submitted through Kimai's
+  prod mailer, Mailpit accepted exactly one message, and the captured attachment
+  bytes matched the deterministic staging invoice.
+
+This evidence does not establish Internet delivery or mailbox receipt.
 
 ## Related Documents
 
