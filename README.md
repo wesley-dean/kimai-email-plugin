@@ -20,9 +20,11 @@ plugin discovery, container compilation, routes, templates, translations,
 authorization, CSRF handling, invoice-file lookup, and email-event dispatch,
 then published those validated bytes.
 
-The automated mail transport is intentionally non-delivering.  Production-like
-SMTP delivery remains a later validation phase, so CI success must not be read
-as proof of external mail delivery or recipient receipt.
+The normal compatibility matrix intentionally uses a non-delivering mail
+transport.  Release `v0.2.0` has additionally passed published-artifact staging
+validation through a real SMTP connection to a controlled Mailpit sink.  This
+establishes SMTP acceptance by that sink, not Internet delivery, mailbox
+receipt, or recipient reading.
 
 See [Compatibility](doc/compatibility.md) and [Testing](doc/testing.md) for the
 evidence boundary.
