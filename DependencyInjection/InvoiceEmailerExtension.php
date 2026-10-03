@@ -71,9 +71,8 @@ class InvoiceEmailerExtension extends Extension implements PrependExtensionInter
      * @param ContainerBuilder $container Mutable dependency container whose
      *     `kimai.permissions` configuration is being prepended.
      * @return void
-     *
-     * @see \KimaiPlugin\InvoiceEmailerBundle\Controller\InvoiceEmailerController
      */
+
     public function prepend(ContainerBuilder $container): void
     {
         $container->prependExtensionConfig('kimai', [
