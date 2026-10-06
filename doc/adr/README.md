@@ -13,7 +13,7 @@ the implementation domain.  See
 
 ### ADR-001: Adopt Released Coding Standards
 
-The repository adopts the immutable `coding_standards@v1.4.0` release and
+The repository adopts the immutable `coding_standards@v2.1.0` release and
 materializes its complete standards snapshot under `doc/standards/`.
 Applicable imported standards are governing requirements, while accepted local
 ADRs or explicit repository policy may refine or supersede them.  Imported

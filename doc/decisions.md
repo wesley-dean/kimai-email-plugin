@@ -10,7 +10,7 @@ See [ADR-000](adr/ADR-000-capability-scope-and-epistemic-honesty.md).
 
 ## Released Coding Standards
 
-The repository adopts `coding_standards@v1.4.0` as a complete, immutable
+The repository adopts `coding_standards@v2.1.0` as a complete, immutable
 snapshot under `doc/standards/`, with provenance recorded in
 `.codingstandardrc`.  Applicable imported standards are governing
 requirements; accepted repository-specific ADRs and explicit local policy may
