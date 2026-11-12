@@ -289,6 +289,10 @@ The maintained design is documented in:
 Repository work is also governed by the released coding standards committed
 under `doc/standards/`.
 
+## Dependabot maintenance
+
+Routine GitHub Actions version updates follow a weekly schedule with a seven-day cooldown. Eligible major, minor, and patch version updates are grouped together where resolution permits; security updates remain a separate process. A group containing any major upgrade requires targeted maintainer review and remains outside the existing non-major-only auto-merge path. Existing Dependabot PRs are not automatically replaced. See [ADR-006](doc/adr/ADR-006-consolidate-github-actions-dependabot-maintenance.md).
+
 ## Changelog
 
 See [CHANGELOG.md](CHANGELOG.md).
