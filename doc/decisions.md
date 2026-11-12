@@ -10,7 +10,7 @@ See [ADR-000](adr/ADR-000-capability-scope-and-epistemic-honesty.md).
 
 ## Released Coding Standards
 
-The repository adopts `coding_standards@v2.1.0` as a complete, immutable
+The repository adopts `coding_standards@v3.2.0` as a complete, immutable
 snapshot under `doc/standards/`, with provenance recorded in
 `.codingstandardrc`.  Applicable imported standards are governing
 requirements; accepted repository-specific ADRs and explicit local policy may
@@ -59,3 +59,16 @@ boundaries, and delegates to the existing validated send service.  Failures are
 contained after persistence, with no automatic retry, status mutation, or audit
 flag; manual send remains the recovery path.  See
 [ADR-005](adr/ADR-005-opt-in-creation-time-automatic-invoice-email.md).
+
+
+## Consolidated GitHub Actions Dependabot Maintenance
+
+ADR-006 retains weekly routine GitHub Actions version updates with a seven-day
+cooldown while grouping eligible major, minor, and patch version changes into
+one wildcard group. Security updates remain separate; any grouped PR containing
+a major upgrade requires manual review and is excluded from the existing
+non-major-only auto-merge condition. This policy does not change the PHP plugin,
+Kimai compatibility claims, authorization or mail boundaries, or release
+publication permissions; existing Dependabot PRs are not silently closed.
+
+See [ADR-006](adr/ADR-006-consolidate-github-actions-dependabot-maintenance.md).
