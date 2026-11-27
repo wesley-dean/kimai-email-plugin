@@ -113,7 +113,7 @@ jobs:
 
       - name: Checkout staging harness
         if: github.event_name == 'pull_request'
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           path: harness
@@ -121,7 +121,7 @@ jobs:
 
       - name: Checkout validated staging harness
         if: github.event_name == 'workflow_run'
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
           path: harness
@@ -129,14 +129,14 @@ jobs:
 
       - name: Checkout released staging harness
         if: github.event_name == 'workflow_dispatch'
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ steps.release.outputs.tag }}
           path: harness
           persist-credentials: false
 
       - name: Checkout Kimai 2.67.0
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # pin@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: kimai/kimai
           ref: 2.67.0
