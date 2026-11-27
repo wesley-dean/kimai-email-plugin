@@ -18,7 +18,7 @@
         "email"
     ],
     "require": {
-        "php": ">=8.2 <8.6"
+        "php": "<8.7"
     },
     "autoload": {
         "psr-4": {
@@ -48,7 +48,7 @@
         "KimaiPlugin\\InvoiceEmailerBundle\\Tests\\": "tests/"
     },
     "require-dev": {
-        "kimai/kimai": "2.67.0",
+        "kimai/kimai": "2.73.0",
         "phpstan/phpstan": "^2.0",
         "phpunit/phpunit": "^10.5"
     },
