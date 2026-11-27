@@ -289,9 +289,16 @@ The maintained design is documented in:
 Repository work is also governed by the released coding standards committed
 under `doc/standards/`.
 
-## Dependabot maintenance
+## Dependency maintenance
 
-Routine GitHub Actions version updates follow a weekly schedule with a seven-day cooldown. Eligible major, minor, and patch version updates are grouped together where resolution permits; security updates remain a separate process. A group containing any major upgrade requires targeted maintainer review and remains outside the existing non-major-only auto-merge path. Existing Dependabot PRs are not automatically replaced. See [ADR-006](doc/adr/ADR-006-consolidate-github-actions-dependabot-maintenance.md).
+Routine version-update PRs are centrally managed through the Jenkins Renovate
+runner, enrolled using root `renovate.json`. The existing GitHub Actions
+Dependabot ecosystem sets `open-pull-requests-limit: 0` to disable routine
+scheduling while retaining separate security-update processing. The
+`dependabot[bot]`-scoped non-major auto-merge workflow remains for security
+PRs; Renovate remains subject to required checks and human code-owner review.
+Routine Dependabot PRs are retired with migration links. See
+[ADR-007](doc/adr/ADR-007-migrate-routine-updates-to-renovate.md).
 
 ## Changelog
 
